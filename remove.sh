@@ -7,7 +7,7 @@
   # get default vpc
   vpc=$(aws ec2 --region eu-central-1 \
     describe-vpcs \
-    | jq -r .Vpcs[0].VpcId)
+    | jq -r .Vpcs[1].VpcId)
 
   # get internet gateway
   igw=$(aws ec2 --region eu-central-1 \
