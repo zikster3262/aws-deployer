@@ -329,12 +329,13 @@ const createDeployment = async (deployment) => {
         .promise();
     }, 6000);
 
-    const infraItRoute = await ec2.createRoute({
-      DestinationCidrBlock: "0.0.0.0/0",
-      GatewayId: internetGateway.InternetGateway.InternetGatewayId,
-      RouteTableId: rt_infra.RouteTable.RouteTableId,
-    });
-    //   .promise();
+    const infraItRoute = await ec2
+      .createRoute({
+        DestinationCidrBlock: "0.0.0.0/0",
+        GatewayId: internetGateway.InternetGateway.InternetGatewayId,
+        RouteTableId: rt_infra.RouteTable.RouteTableId,
+      })
+      .promise();
 
     //Create AWS Security Group
 
