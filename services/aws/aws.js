@@ -217,7 +217,6 @@ const createDeployment = async (data) => {
       eksSG.GroupId
     );
 
-    // logger.log.info("Kubernetes starts here");
     // // ------------------------- Create EKS cluster ---------------------------------//
     const eksClusters = eksCluster.createEKS(
       data,
@@ -226,44 +225,18 @@ const createDeployment = async (data) => {
       privateSubnet2.Subnet.SubnetId
     );
 
-    // const ltmp = await createLaunchTemplate(deployment, eksNodesSgDefault);
+    // Create Launch Template
 
-    // setTimeout(() => {
-    //   logger.log.info("Kubernetes Node Group creation starts here");
-    //   eks.createNodegroup(
-    //     {
-    //       clusterName: `${deployment.name}-eks-cluster` /* required */,
-    //       nodeRole:
-    //         "arn:aws:iam::735968160530:role/AWS-Nodes-Role" /* required */,
-    //       nodegroupName: `${deployment.name}-eks-nodes` /* required */,
-    //       subnets: [
-    //         subnetprivOne.Subnet.SubnetId,
-    //         subnetprivTwo.Subnet.SubnetId,
-    //       ],
-    //       labels: {
-    //         "cluster-name": `${deployment.name}-eks-cluster`,
-    //       },
-    //       scalingConfig: {
-    //         desiredSize: "2",
-    //         maxSize: "2",
-    //         minSize: "1",
-    //       },
-    //       tags: {
-    //         "cluster-name": `${deployment.name}-eks-cluster`,
-    //         [`kubernetes.io/cluster/${deployment.name}-eks-cluster`]: "owned",
-    //       },
-    //       launchTemplate: {
-    //         id: ltmp.LaunchTemplate.LaunchTemplateId,
-    //         version: `${ltmp.LaunchTemplate.LatestVersionNumber}`,
-    //       },
-    //     },
-    //     function (err, data) {
-    //       if (err) console.log(err, err.stack);
-    //       // an error occurred
-    //       else console.log(data); // successful response
-    //     }
-    //   );
-    // }, 12 * 60 * 1000);
+    const ltmp = await eksCluster.createLaunchTemplate(data, eksSG.GroupId);
+
+    setTimeout(() => {
+      const eksNodes = eksCluster.createNodeGroup(
+        data,
+        privateSubnet1.Subnet.SubnetId,
+        privateSubnet2.Subnet.SubnetId,
+        ltmp
+      );
+    }, 12 * 60 * 1000);
 
     // // // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
     // (deploymentModel.name = deployment.name),
@@ -309,29 +282,3 @@ const createDeployment = async (data) => {
 module.exports = {
   createDeployment,
 };
-
-// async function createLaunchTemplate(deployment, eksSgDefault) {
-//   const ec2 = new AWS.EC2({ region: deployment.region });
-//   const ltmp = await ec2
-//     .createLaunchTemplate({
-//       LaunchTemplateData: {
-//         InstanceType: "m5.large",
-//         BlockDeviceMappings: [
-//           {
-//             DeviceName: "/dev/xvda",
-//             Ebs: {
-//               DeleteOnTermination: true,
-//               Encrypted: true,
-//               VolumeSize: "30",
-//               VolumeType: "gp2",
-//             },
-//           },
-//           /* more items */
-//         ],
-//         SecurityGroupIds: [eksSgDefault.GroupId],
-//       },
-//       LaunchTemplateName: `${deployment.name}-eks-template`,
-//     })
-//     .promise();
-//   return ltmp;
-// }

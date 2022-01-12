@@ -32,6 +32,78 @@ async function createEKS(data, defaultSG, sub1, sub2) {
   }
 }
 
+async function createLaunchTemplate(data, sgId) {
+  const ec2 = new AWS.EC2({ region: data.region });
+  try {
+    const ltmp = await ec2
+      .createLaunchTemplate({
+        LaunchTemplateData: {
+          InstanceType: "m5.large",
+          BlockDeviceMappings: [
+            {
+              DeviceName: "/dev/xvda",
+              Ebs: {
+                DeleteOnTermination: true,
+                Encrypted: true,
+                VolumeSize: "30",
+                VolumeType: "gp2",
+              },
+            },
+            /* more items */
+          ],
+          SecurityGroupIds: [sgId],
+        },
+        LaunchTemplateName: `${data.name}-eks-template`,
+      })
+      .promise();
+    logger.log.info(`Launch template ${data.name}-eks-template was created!`);
+    return ltmp;
+  } catch (error) {
+    logger.log.error(
+      `Error: Launch template ${data.name}-eks-template was  not created! There was an error. Please see the error bellow:\n${error}`
+    );
+  }
+}
+
+async function createNodeGroup(data, sub1, sub2, ltmp) {
+  const eks = new AWS.EKS({ region: data.region });
+  try {
+    const eksNodes = await eks
+      .createNodegroup({
+        clusterName: `${data.name}-cluster` /* required */,
+        nodeRole:
+          "arn:aws:iam::735968160530:role/AWS-Nodes-Role" /* required */,
+        nodegroupName: `${data.name}-eks-nodes` /* required */,
+        subnets: [sub1, sub2],
+        labels: {
+          "cluster-name": `${data.name}-cluster`,
+        },
+        scalingConfig: {
+          desiredSize: "2",
+          maxSize: "2",
+          minSize: "1",
+        },
+        tags: {
+          "cluster-name": `${data.name}-cluster`,
+          [`kubernetes.io/cluster/${data.name}-cluster`]: "owned",
+        },
+        launchTemplate: {
+          id: ltmp.LaunchTemplate.LaunchTemplateId,
+          version: `${ltmp.LaunchTemplate.LatestVersionNumber}`,
+        },
+      })
+      .promise();
+    logger.log.info(`EKS Node Group ${data.name} was created!`);
+    return eksNodes;
+  } catch (error) {
+    logger.log.error(
+      `Error: EKS Node Group ${data.name} was  not created! There was an error. Please see the error bellow:\n${error}`
+    );
+  }
+}
+
 module.exports = {
   createEKS,
+  createLaunchTemplate,
+  createNodeGroup,
 };
