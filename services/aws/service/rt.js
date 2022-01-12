@@ -20,7 +20,9 @@ async function createRouteTable(data, prefix, VpcId) {
         ],
       })
       .promise();
-    logger.log.info(`RT ${prefix}-${data.name} was created!`);
+    logger.log.info(
+      `RT ${prefix}-${data.name} was created! ID - ${routeTable.RouteTable.RouteTableId}`
+    );
     return routeTable;
   } catch (error) {
     logger.log.error(
@@ -38,6 +40,9 @@ async function createRouteTableAssociation(data, rtId, subnetId) {
         SubnetId: subnetId,
       })
       .promise();
+    logger.log.info(
+      `Route Table Association for ${data.name} was created! ID - \n${rta}`
+    );
     return rta;
   } catch (error) {
     logger.log.error(
@@ -56,6 +61,9 @@ async function createItgwRoutes(data, dest, itgw, rtId) {
         RouteTableId: rtId,
       })
       .promise();
+    logger.log.info(
+      `Create Ingress Route for ITGW for ${data.name} was created! ID - \n${route}`
+    );
     return route;
   } catch (error) {
     logger.log.error(
@@ -74,6 +82,9 @@ async function createNatGwRoutes(data, dest, natgw, rtId) {
         RouteTableId: rtId,
       })
       .promise();
+    logger.log.info(
+      `Create Ingress Route for NATGW for ${data.name} was created! ID - \n${route}`
+    );
     return route;
   } catch (error) {
     logger.log.error(

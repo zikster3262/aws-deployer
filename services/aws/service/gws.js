@@ -38,7 +38,9 @@ async function createNatGW(data, subnetId) {
       })
       .promise();
 
-    logger.log.info(`natgw-${data.name} was created!`);
+    logger.log.info(
+      `natgw-${data.name} was created! ID - ${natgw.NatGateway.NatGatewayId}`
+    );
     return natgw;
   } catch (error) {
     logger.log.error(
@@ -71,7 +73,9 @@ async function createItgw(data, VpcId) {
         VpcId: VpcId,
       })
       .promise();
-    logger.log.info(`itgw-${data.name} was created!`);
+    logger.log.info(
+      `Create itgw-${data.name} was created! ID - ${itgw.InternetGateway.InternetGatewayId}`
+    );
     return itgw;
   } catch (error) {
     logger.log.error(

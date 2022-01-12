@@ -30,7 +30,9 @@ async function createSubnet(data, name, cidr_block, VpcId, zone) {
         ],
       })
       .promise();
-    logger.log.info(`Subnet ${data.name}-${name}-cluster was  created!`);
+    logger.log.info(
+      `Subnet ${data.name}-${name}-cluster was  created! ID - ${subnet.Subnet.SubnetId}`
+    );
     return subnet;
   } catch (error) {
     logger.log.error(

@@ -26,7 +26,9 @@ async function createSecurityGroup(data, name, vpcID) {
         ],
       })
       .promise();
-
+    logger.log.info(
+      `Security Group ${name}-sg-default  was  created! ID - ${sgGroup.GroupId}`
+    );
     return sgGroup;
   } catch (error) {
     logger.log.error(

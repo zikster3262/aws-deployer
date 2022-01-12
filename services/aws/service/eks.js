@@ -23,7 +23,9 @@ async function createEKS(data, defaultSG, sub1, sub2) {
         },
       })
       .promise();
-    logger.log.info(`Cluster: ${data.name}-cluster was created!`);
+    logger.log.info(
+      `Cluster: ${data.name}-cluster was created! ID - ${eksCluster.cluster.arn}`
+    );
     return eksCluster;
   } catch (error) {
     logger.log.error(
@@ -56,7 +58,9 @@ async function createLaunchTemplate(data, sgId) {
         LaunchTemplateName: `${data.name}-eks-template`,
       })
       .promise();
-    logger.log.info(`Launch template ${data.name}-eks-template was created!`);
+    logger.log.info(
+      `Launch template ${data.name}-eks-template was created! ID - ${ltmp.LaunchTemplate.LaunchTemplateId}`
+    );
     return ltmp;
   } catch (error) {
     logger.log.error(

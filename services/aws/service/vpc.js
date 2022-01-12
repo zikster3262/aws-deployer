@@ -24,7 +24,9 @@ async function createVpc(data) {
         ],
       })
       .promise();
-    logger.log.info(`vpc-${data.name} was  created!`);
+    logger.log.info(
+      `vpc-${data.name} was  created! ID - ${response.Vpc.VpcId}`
+    );
     return response;
   } catch (error) {
     logger.log.error(

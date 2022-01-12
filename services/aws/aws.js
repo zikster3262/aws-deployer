@@ -6,7 +6,7 @@ const Subnet = require("./service/subnets");
 const gws = require("./service/gws");
 const table = require("./service/rt");
 const sg = require("./service/sg");
-const eksCluster = require("./service/eks");
+const eksClass = require("./service/eks");
 AWS.config.update({ region: config.region });
 const db = require("../db/db");
 require("dotenv").config();
@@ -218,7 +218,7 @@ const createDeployment = async (data) => {
     );
 
     // // ------------------------- Create EKS cluster ---------------------------------//
-    const eksClusters = eksCluster.createEKS(
+    const cluster = await eksClass.createEKS(
       data,
       eksSG.GroupId,
       privateSubnet1.Subnet.SubnetId,
@@ -227,10 +227,10 @@ const createDeployment = async (data) => {
 
     // Create Launch Template
 
-    const ltmp = await eksCluster.createLaunchTemplate(data, eksSG.GroupId);
+    const ltmp = await eksClass.createLaunchTemplate(data, eksSG.GroupId);
 
     setTimeout(() => {
-      const eksNodes = eksCluster.createNodeGroup(
+      const eksNodes = eksClass.createNodeGroup(
         data,
         privateSubnet1.Subnet.SubnetId,
         privateSubnet2.Subnet.SubnetId,
@@ -238,40 +238,37 @@ const createDeployment = async (data) => {
       );
     }, 12 * 60 * 1000);
 
-    // // // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
-    // (deploymentModel.name = deployment.name),
-    //   (deploymentModel.VpcId = vpc.Vpc.VpcId),
-    //   (deploymentModel.cidr_block = deployment.cidr_block),
-    //   (deploymentModel.privateOneSubnetId = subnetprivOne.Subnet.SubnetId),
-    //   (deploymentModel.privateTwoSubnetId = subnetprivTwo.Subnet.SubnetId),
-    //   (deploymentModel.publicOneSubnetId = subnetpubOne.Subnet.SubnetId),
-    //   (deploymentModel.publicTwoSubnetId = subnetpubTwo.Subnet.SubnetId),
-    //   (deploymentModel.privateOneSubnetCidr = deployment.subnet_prv_cidr_one),
-    //   (deploymentModel.privateOneSubnetCidr = deployment.subnet_prv_cidr_two),
-    //   (deploymentModel.publicOneSubnetCidr = deployment.subnet_public_cidr_one),
-    //   (deploymentModel.publicTwoSubnetCidr = deployment.subnet_public_cidr_two),
-    //   (deploymentModel.infraSubnetCidr = deployment.subnet_infra_cidr),
-    //   (deploymentModel.publicRouteTableId = rt_pub.RouteTable.RouteTableId),
-    //   (deploymentModel.privateRouteTableId = rt_priv.RouteTable.RouteTableId),
-    //   (deploymentModel.infraSubnetId = infraSubnet.Subnet.SubnetId),
-    //   (deploymentModel.infraRouteTableId = rt_infra.RouteTable.RouteTableId),
-    //   (deploymentModel.itgw =
-    //     internetGateway.InternetGateway.InternetGatewayId),
-    //   (deploymentModel.eip = eip.AllocationId);
-    // deploymentModel.natgw = natgw.NatGateway.NatGatewayId;
-    // deploymentModel.eksArn = await (await eksCluster).cluster.arn;
+    // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
+    Model.name = data.name;
+    Model.vpc_cidrBlock = data.cidr_block;
+    Model.vpcID = vpc.Vpc.VpcId;
+    Model.privateSubnet1Id = privateSubnet1.Subnet.SubnetId;
+    Model.privateSubnet2Id = privateSubnet2.Subnet.SubnetId;
+    Model.privateSubnet1Cidr = privateSubnet1.Subnet.CidrBlock;
+    Model.privateSubnet2Cidr = privateSubnet2.Subnet.CidrBlock;
+    Model.publicSubnet1Id = pubSubnet1.Subnet.SubnetId;
+    Model.publicSubnet2Id = pubSubnet2.Subnet.SubnetId;
+    Model.publiceSubnet1Cidr = pubSubnet1.Subnet.CidrBlock;
+    Model.publiceSubnet2Cidr = pubSubnet2.Subnet.CidrBlock;
+    Model.infraSubnetId = infraSubnet.Subnet.SubnetId;
+    Model.infraSubnetCidr = infraSubnet.Subnet.CidrBlock;
+    Model.privateRouteTable = privateRouteTable.RouteTable.RouteTableId;
+    Model.publicRouteTable = publicRouteTable.RouteTable.RouteTableId;
+    Model.infraRouteTable = infraRouteTable.RouteTable.RouteTableId;
+    Model.intgwId = intgw.InternetGateway.InternetGatewayId;
+    Model.natgw = natgw.NatGateway.NatGatewayId;
+    Model.eksArn = cluster.cluster.arn;
+    //-------------------------  Save Data to the MongoDB database -----------------//
 
-    // // // // -------------------------  Save Data to the MongoDB database -----------------//
-
-    // db.saveData(deploymentModel);
+    db.saveData(Model);
     // // -------------------------  Log success result to the console ----------------//
-    // logger.log.info(
-    //   `Deployment ${
-    //     deployment.name
-    //   } information were inserted into the database. Please see the create informations here: ${JSON.stringify(
-    //     deploymentModel
-    //   )}`
-    // );
+    logger.log.info(
+      `Deployment ${
+        data.name
+      } information were inserted into the database. Info here: \n ${JSON.stringify(
+        Model
+      )}`
+    );
   } catch (error) {
     logger.log.error(
       `Deployment ${data.name} was  not created! There was an error. Please see the error bellow: ${error}`
