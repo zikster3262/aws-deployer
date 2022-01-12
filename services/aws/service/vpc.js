@@ -1,26 +1,38 @@
 const AWS = require("aws-sdk");
+const logger = require("../../../utils/logger");
 
-async function createVpc(vpc) {
-  const ec2 = new AWS.EC2({ region: vpc.region });
-  const vpc = await ec2
-    .createVpc({
-      CidrBlock: `${vpc.cidr_block}`,
-      TagSpecifications: [
-        {
-          ResourceType: "vpc",
-          Tags: [
-            {
-              Key: "Name",
-              Value: `vpc-${vpc.name}`,
-            },
-            {
-              Key: `kubernetes.io/cluster/${vpc.name}-eks-cluster`,
-              Value: "shared",
-            },
-          ],
-        },
-      ],
-    })
-    .promise();
-  return vpc;
+async function createVpc(data) {
+  const ec2 = new AWS.EC2({ region: data.region });
+  try {
+    const response = await ec2
+      .createVpc({
+        CidrBlock: `${data.cidr_block}`,
+        TagSpecifications: [
+          {
+            ResourceType: "vpc",
+            Tags: [
+              {
+                Key: "Name",
+                Value: `vpc-${data.name}`,
+              },
+              {
+                Key: `kubernetes.io/cluster/${data.name}-cluster`,
+                Value: "shared",
+              },
+            ],
+          },
+        ],
+      })
+      .promise();
+    logger.log.info(`vpc-${data.name} was  created!`);
+    return response;
+  } catch (error) {
+    logger.log.error(
+      `Error: VPC: vpc-${data.name} was  not created! There was an error. Please see the error bellow:\n${error}`
+    );
+  }
 }
+
+module.exports = {
+  createVpc,
+};
