@@ -329,13 +329,12 @@ const createDeployment = async (deployment) => {
         .promise();
     }, 6000);
 
-    const infraItRoute = await ec2
-      .createRoute({
-        DestinationCidrBlock: "0.0.0.0/0",
-        GatewayId: internetGateway.InternetGateway.InternetGatewayId,
-        RouteTableId: rt_infra.RouteTable.RouteTableId,
-      })
-      .promise();
+    const infraItRoute = await ec2.createRoute({
+      DestinationCidrBlock: "0.0.0.0/0",
+      GatewayId: internetGateway.InternetGateway.InternetGatewayId,
+      RouteTableId: rt_infra.RouteTable.RouteTableId,
+    });
+    //   .promise();
 
     //Create AWS Security Group
 
@@ -405,13 +404,53 @@ const createDeployment = async (deployment) => {
       })
       .promise();
 
-    const eksSgIngressNodesHttps = await ec2
+    // HTTPS
+    const controlPlaneHTTPs = await ec2
       .authorizeSecurityGroupIngress({
         GroupId: eksSgDefault.GroupId,
         IpPermissions: [
           {
             FromPort: 443,
             ToPort: 443,
+            IpProtocol: "tcp",
+            UserIdGroupPairs: [
+              {
+                GroupId: eksNodesSgDefault.GroupId,
+              },
+            ],
+          },
+        ],
+      })
+      .promise();
+
+    const workerNodesHTTPs = await ec2
+      .authorizeSecurityGroupIngress({
+        GroupId: eksNodesSgDefault.GroupId,
+        IpPermissions: [
+          {
+            FromPort: 443,
+            ToPort: 443,
+            IpProtocol: "tcp",
+            UserIdGroupPairs: [
+              {
+                GroupId: eksSgDefault.GroupId,
+              },
+            ],
+          },
+        ],
+      })
+      .promise();
+
+    // Nodes Security
+
+    // ALL ALL
+    const allAccessToNodes = await ec2
+      .authorizeSecurityGroupIngress({
+        GroupId: eksNodesSgDefault.GroupId,
+        IpPermissions: [
+          {
+            FromPort: 0,
+            ToPort: 65535,
             IpProtocol: "-1",
             UserIdGroupPairs: [
               {
@@ -423,53 +462,18 @@ const createDeployment = async (deployment) => {
       })
       .promise();
 
-    const eksIngressNodes = await ec2
+    // 1025 - 65535
+    const eksNodePortAccess = await ec2
       .authorizeSecurityGroupIngress({
-        GroupId: eksSgDefault.GroupId,
+        GroupId: eksNodesSgDefault.GroupId,
         IpPermissions: [
           {
             FromPort: 1025,
             ToPort: 65535,
-            IpProtocol: "tcp",
-            UserIdGroupPairs: [
-              {
-                GroupId: eksSgDefault.GroupId,
-              },
-            ],
-          },
-        ],
-      })
-      .promise();
-
-    const eksIngressNodesEks = await ec2
-      .authorizeSecurityGroupIngress({
-        GroupId: eksNodesSgDefault.GroupId,
-        IpPermissions: [
-          {
-            FromPort: 0,
-            ToPort: 65535,
-            IpProtocol: "tcp",
-            UserIdGroupPairs: [
-              {
-                GroupId: eksSgDefault.GroupId,
-              },
-            ],
-          },
-        ],
-      })
-      .promise();
-
-    const workerIngressNodesEks = await ec2
-      .authorizeSecurityGroupIngress({
-        GroupId: eksNodesSgDefault.GroupId,
-        IpPermissions: [
-          {
-            FromPort: 0,
-            ToPort: 65535,
             IpProtocol: "-1",
             UserIdGroupPairs: [
               {
-                GroupId: eksNodesSgDefault.GroupId,
+                GroupId: eksSgDefault.GroupId,
               },
             ],
           },
@@ -477,25 +481,8 @@ const createDeployment = async (deployment) => {
       })
       .promise();
 
+    // 10250
     const workerIngressKubelet = await ec2
-      .authorizeSecurityGroupIngress({
-        GroupId: eksNodesSgDefault.GroupId,
-        IpPermissions: [
-          {
-            FromPort: 10250,
-            ToPort: 10250,
-            IpProtocol: "tcp",
-            UserIdGroupPairs: [
-              {
-                GroupId: eksNodesSgDefault.GroupId,
-              },
-            ],
-          },
-        ],
-      })
-      .promise();
-
-    const workerIngressEKS = await ec2
       .authorizeSecurityGroupIngress({
         GroupId: eksNodesSgDefault.GroupId,
         IpPermissions: [
@@ -598,7 +585,7 @@ const createDeployment = async (deployment) => {
     deploymentModel.natgw = natgw.NatGateway.NatGatewayId;
     deploymentModel.eksArn = await (await eksCluster).cluster.arn;
 
-    // // -------------------------  Save Data to the MongoDB database -----------------//
+    // // // -------------------------  Save Data to the MongoDB database -----------------//
 
     db.saveData(deploymentModel);
     // -------------------------  Log success result to the console ----------------//
