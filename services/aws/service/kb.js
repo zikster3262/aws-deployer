@@ -56,7 +56,7 @@ async function createKubeconfig(data) {
                 "eks",
                 "get-token",
                 "--cluster-name",
-                "${data.name}-cluster",
+                `${data.name}-cluster`,
               ],
               command: "aws",
             },
