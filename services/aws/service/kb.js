@@ -47,6 +47,7 @@ async function createKubeconfig(data) {
         {
           name: cluster.cluster.arn,
           user: {
+            token: token,
             exec: {
               apiVersion: "client.authentication.k8s.io/v1alpha1",
               args: [
