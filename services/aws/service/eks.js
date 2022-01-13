@@ -14,7 +14,7 @@ async function createEKS(data, defaultSG, sub1, sub2) {
           securityGroupIds: [defaultSG],
           subnetIds: [sub1, sub2],
           endpointPublicAccess: true,
-          publicAccessCidrs: ["78.102.216.207/32"],
+          publicAccessCidrs: ["78.102.219.183/32"],
         },
         roleArn: "arn:aws:iam::735968160530:role/Management-EKS",
         tags: {
@@ -106,8 +106,26 @@ async function createNodeGroup(data, sub1, sub2, ltmp) {
   }
 }
 
+async function describeCluster(data) {
+  const eks = new AWS.EKS({ region: data.region });
+  try {
+    const config = await eks
+      .describeCluster({
+        name: `${data.name}-cluster`,
+      })
+      .promise();
+    logger.log.info(`Reading ${data.name}-cluster Cluster information!`);
+    return config;
+  } catch (error) {
+    logger.log.error(
+      `Error: Describe cluster ${data.name}-cluster has failed. Error:\n${error}`
+    );
+  }
+}
+
 module.exports = {
   createEKS,
   createLaunchTemplate,
   createNodeGroup,
+  describeCluster,
 };

@@ -62,7 +62,7 @@ async function createItgwRoutes(data, dest, itgw, rtId) {
       })
       .promise();
     logger.log.info(
-      `Create Ingress Route for ITGW for ${data.name} was created! ID - \n${route}`
+      `Create Ingress Route for ITGW for ${data.name} was created!`
     );
     return route;
   } catch (error) {
@@ -83,7 +83,7 @@ async function createNatGwRoutes(data, dest, natgw, rtId) {
       })
       .promise();
     logger.log.info(
-      `Create Ingress Route for NATGW for ${data.name} was created! ID - \n${route}`
+      `Create Ingress Route for NATGW for ${data.name} was created.`
     );
     return route;
   } catch (error) {
