@@ -40,9 +40,7 @@ async function createRouteTableAssociation(data, rtId, subnetId) {
         SubnetId: subnetId,
       })
       .promise();
-    logger.log.info(
-      `Route Table Association for ${data.name} was created! ID - \n${rta}`
-    );
+    logger.log.info(`Route Table Association for ${data.name} was created!`);
     return rta;
   } catch (error) {
     logger.log.error(
