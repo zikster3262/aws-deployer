@@ -242,9 +242,12 @@ const createDeployment = async (data) => {
     // }, 12 * 60 * 1000);
 
     setTimeout(() => {
-      const kubeConfig = k8sConfig.createKubeconfig(data);
+      const kubeConfig = await k8sConfig.createKubeconfig(data);
       const yaml = new YAML.Document();
+      console.log(kubeConfig);
       yaml.contents = kubeConfig;
+
+      console.log(yaml);
       const kc = new k8s.KubeConfig();
       kc.loadFromString(yaml);
       const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
@@ -273,7 +276,7 @@ const createDeployment = async (data) => {
     Model.intgwId = intgw.InternetGateway.InternetGatewayId;
     Model.natgw = natgw.NatGateway.NatGatewayId;
     Model.eksArn = cluster.cluster.arn;
-    //-------------------------  Save Data to the MongoDB database -----------------//
+    // -------------------------  Save Data to the MongoDB database -----------------//
 
     db.saveData(Model);
     // -------------------------  Log success result to the console ----------------//

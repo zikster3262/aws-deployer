@@ -52,7 +52,7 @@ async function createKubeconfig(data) {
               apiVersion: "client.authentication.k8s.io/v1alpha1",
               args: [
                 "--region",
-                "eu-central-1",
+                `${data.region}`,
                 "eks",
                 "get-token",
                 "--cluster-name",
