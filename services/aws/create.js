@@ -268,41 +268,57 @@ const createDeployment = async (data) => {
         privateSubnet2.Subnet.SubnetId,
         ltmp
       );
-    }, 16 * 60 * 1000);
-    // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
-    Model.name = data.name;
-    Model.vpc_cidrBlock = data.cidr_block;
-    Model.vpcID = vpc.Vpc.VpcId;
-    Model.privateSubnet1Id = privateSubnet1.Subnet.SubnetId;
-    Model.privateSubnet2Id = privateSubnet2.Subnet.SubnetId;
-    Model.privateSubnet1Cidr = privateSubnet1.Subnet.CidrBlock;
-    Model.privateSubnet2Cidr = privateSubnet2.Subnet.CidrBlock;
-    Model.publicSubnet1Id = pubSubnet1.Subnet.SubnetId;
-    Model.publicSubnet2Id = pubSubnet2.Subnet.SubnetId;
-    Model.publiceSubnet1Cidr = pubSubnet1.Subnet.CidrBlock;
-    Model.publiceSubnet2Cidr = pubSubnet2.Subnet.CidrBlock;
-    Model.infraSubnetId = infraSubnet.Subnet.SubnetId;
-    Model.infraSubnetCidr = infraSubnet.Subnet.CidrBlock;
-    Model.privateRouteTable = privateRouteTable.RouteTable.RouteTableId;
-    Model.publicRouteTable = publicRouteTable.RouteTable.RouteTableId;
-    Model.infraRouteTable = infraRouteTable.RouteTable.RouteTableId;
-    Model.intgwId = intgw.InternetGateway.InternetGatewayId;
-    Model.natgw = natgw.NatGateway.NatGatewayId;
-    Model.eksArn = cluster.cluster.arn;
-    // -------------------------  Save Data to the MongoDB database -----------------//
 
-    db.saveData(Model);
-    // -------------------------  Log success result to the console ----------------//
-    logger.log.info(
-      `Deployment ${
-        data.name
-      } information were inserted into the database. Info here: \n ${JSON.stringify(
-        Model
-      )}`
-    );
+      // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
+      Model.name = data.name;
+      Model.vpc = {
+        vpc_cidrBlock: data.cidr_block,
+        vpcID: vpc.Vpc.VpcId,
+      };
+      Model.subnets = {
+        privateSubnet1Id: privateSubnet1.Subnet.SubnetId,
+        privateSubnet2Id: privateSubnet2.Subnet.SubnetId,
+        privateSubnet1Cidr: privateSubnet1.Subnet.CidrBlock,
+        privateSubnet2Cidr: privateSubnet2.Subnet.CidrBlock,
+        publicSubnet1Id: pubSubnet1.Subnet.SubnetId,
+        publicSubnet2Id: pubSubnet2.Subnet.SubnetId,
+        publiceSubnet1Cidr: pubSubnet1.Subnet.CidrBlock,
+        publiceSubnet2Cidr: pubSubnet2.Subnet.CidrBlock,
+        infraSubnetId: infraSubnet.Subnet.SubnetId,
+        infraSubnetCidr: infraSubnet.Subnet.CidrBlock,
+      };
+      Model.routesTables = {
+        privateRouteTable: privateRouteTable.RouteTable.RouteTableId,
+        publicRouteTable: publicRouteTable.RouteTable.RouteTableId,
+        infraRouteTable: infraRouteTable.RouteTable.RouteTableId,
+      };
+      Model.gateway = {
+        intgwId: intgw.InternetGateway.InternetGatewayId,
+        natgw: natgw.NatGateway.NatGatewayId,
+      };
+      Model.eks = {
+        eksClusterArn: cluster.cluster.arn,
+        eksControlPlaneSecurityGroup: eksSG.GroupId,
+        eksNodesSecurityGroup: nodeEksSG.GroupId,
+      };
+      Model.ec2 = {
+        lauchTemplateID: ltmp.LaunchTemplate.LaunchTemplateId,
+      };
+
+      db.saveData(Model);
+
+      // -------------------------  Log success result to the console ----------------//
+      logger.log.info(
+        `Deployment ${
+          data.name
+        } information were inserted into the database. Info here: \n ${JSON.stringify(
+          Model
+        )}`
+      );
+    }, 16 * 60 * 1000);
   } catch (error) {
     logger.log.error(
-      `Deployment ${data.name} was  not created! There was an error. Please see the error bellow: ${error}`
+      `Deployment ${data.name} was  not created! There was an error. Please see the error bellow: \n ${error}`
     );
   }
 };

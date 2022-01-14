@@ -15,6 +15,11 @@ body {
   text-rendering: optimizeLegibility;
   -moz-osx-font-smoothing: grayscale;
 }
+
+.accordion {
+  margin: 15% 20% 15% 20%;
+}
+
 h2 {
   color: #fff;
   text-align: left;
@@ -173,4 +178,20 @@ form-holder {
 
 .valid-feedback {
   color: #2acc80;
+}
+
+#table-accordition {
+  margin-left: 5px;
+  font-size: small;
+}
+.cluster-text {
+  margin-top: 10rem;
+  text-align: center;
+  font-size: 10rem;
+}
+
+.cluster-paragraph {
+  text-align: center;
+  font-size: x-large;
+  color: white;
 }
