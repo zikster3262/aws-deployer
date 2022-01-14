@@ -184,3 +184,14 @@ form-holder {
   margin-left: 5px;
   font-size: small;
 }
+.cluster-text {
+  margin-top: 10rem;
+  text-align: center;
+  font-size: 10rem;
+}
+
+.cluster-paragraph {
+  text-align: center;
+  font-size: x-large;
+  color: white;
+}

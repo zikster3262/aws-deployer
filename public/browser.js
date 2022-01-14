@@ -42,6 +42,9 @@ function submitForm(e) {
 
 function showItem() {
   axios.get("/get-deployments").then((response) => {
+    if (response.data.data.length) {
+      $(".cluster-paragraph").text("Here are your clusters!");
+    }
     response.data.data.forEach((response) => {
       const name = response.name.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
       $(".accordion").append(`
@@ -49,7 +52,7 @@ function showItem() {
         <h2 class="accordion-header" id="panelsStayOpen-headingOne">
           <button class="accordion-button" type="button" data-bs-toggle="collapse"
             data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
-          Cluster: ${name}
+          Name: ${name}
           </button>
         </h2>
         <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse"
