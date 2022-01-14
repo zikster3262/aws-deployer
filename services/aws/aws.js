@@ -26,7 +26,7 @@ const createDeployment = async (data) => {
     // --------------------------- Creation of VPC  -------------------------------------------------------------//
 
     const vpc = await VPC.createVpc(data);
-    const enableVpcHostResolution = VPC.enableVpcDnsResolution(
+    const enableVpcHostResolution = await VPC.enableVpcDnsResolution(
       vpc.Vpc.VpcId,
       data
     );
