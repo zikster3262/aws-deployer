@@ -28,7 +28,7 @@ async function saveData(data) {
 async function findData(name) {
   const db = await MongoClient.connect(uri);
   var dbo = db.db(database);
-  const result = await dbo.collection("vpcs").findOne({ Vpc_name: name });
+  const result = await dbo.collection("vpcs").findOne({ name: name });
   if (result) {
     return result;
   } else {

@@ -13,8 +13,9 @@ async function createEKS(data, defaultSG, sub1, sub2) {
         resourcesVpcConfig: {
           securityGroupIds: [defaultSG],
           subnetIds: [sub1, sub2],
+          endpointPrivateAccess: true,
           endpointPublicAccess: true,
-          publicAccessCidrs: ["78.102.219.183/32"],
+          publicAccessCidrs: ["78.102.47.79/32"],
         },
         roleArn: "arn:aws:iam::735968160530:role/Management-EKS",
         tags: {
@@ -41,6 +42,7 @@ async function createLaunchTemplate(data, sgId) {
       .createLaunchTemplate({
         LaunchTemplateData: {
           InstanceType: "m5.large",
+          KeyName: "david-test",
           BlockDeviceMappings: [
             {
               DeviceName: "/dev/xvda",
@@ -53,9 +55,32 @@ async function createLaunchTemplate(data, sgId) {
             },
             /* more items */
           ],
+          TagSpecifications: [
+            {
+              ResourceType: "instance",
+              Tags: [
+                {
+                  Key: `kubernetes.io/cluster/${data.name}-cluster`,
+                  Value: "owned",
+                },
+              ],
+            },
+          ],
           SecurityGroupIds: [sgId],
         },
         LaunchTemplateName: `${data.name}-eks-template`,
+        TagSpecifications: [
+          {
+            ResourceType: "launch-template",
+            Tags: [
+              {
+                Key: `kubernetes.io/cluster/${data.name}-cluster`,
+                Value: "owned",
+              },
+              /* more items */
+            ],
+          },
+        ],
       })
       .promise();
     logger.log.info(

@@ -1,7 +1,7 @@
 const AWS = require("aws-sdk");
 const logger = require("../../../utils/logger");
 
-async function createSubnet(data, name, cidr_block, VpcId, zone) {
+async function createSubnet(data, name, cidr_block, VpcId, zone, tag) {
   const ec2 = new AWS.EC2({ region: data.region });
   try {
     const subnet = await ec2
@@ -18,7 +18,7 @@ async function createSubnet(data, name, cidr_block, VpcId, zone) {
                 Value: `${data.name}-${name}`,
               },
               {
-                Key: "kubernetes.io/role/internal-elb",
+                Key: `${tag != "" ? tag : name}`,
                 Value: "1",
               },
               {

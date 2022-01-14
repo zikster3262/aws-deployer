@@ -35,6 +35,29 @@ async function createVpc(data) {
   }
 }
 
+async function enableVpcDnsResolution(vpcID, data) {
+  const ec2 = new AWS.EC2({ region: data.region });
+  try {
+    const enableDNS = ec2.modifyVpcAttribute({
+      EnableDnsSupport: {
+        Value: true,
+      },
+      EnableDnsHostnames: {
+        Value: true,
+      },
+
+      VpcId: vpcID,
+    });
+    logger.log.info(`VpcHostnameResolution was enabled for vpc ${vpcID}`);
+    return enableDNS;
+  } catch (error) {
+    logger.log.error(
+      `VpcHostnameResolution was not enabled for vpc ${vpcID}! Error: /n ${error}`
+    );
+  }
+}
+
 module.exports = {
   createVpc,
+  enableVpcDnsResolution,
 };

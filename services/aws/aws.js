@@ -26,6 +26,10 @@ const createDeployment = async (data) => {
     // --------------------------- Creation of VPC  -------------------------------------------------------------//
 
     const vpc = await VPC.createVpc(data);
+    const enableVpcHostResolution = VPC.enableVpcDnsResolution(
+      vpc.Vpc.VpcId,
+      data
+    );
 
     // --------------------------- Creation of Subnets  -------------------------------------------------------------//
     const privateSubnet1 = await Subnet.createSubnet(
@@ -33,7 +37,8 @@ const createDeployment = async (data) => {
       "privateSubnet1",
       data.subnet1,
       vpc.Vpc.VpcId,
-      "a"
+      "a",
+      "kubernetes.io/role/internal-elb"
     );
 
     const privateSubnet2 = await Subnet.createSubnet(
@@ -41,7 +46,8 @@ const createDeployment = async (data) => {
       "privateSubnet2",
       data.subnet2,
       vpc.Vpc.VpcId,
-      "b"
+      "b",
+      "kubernetes.io/role/internal-elb"
     );
 
     const pubSubnet1 = await Subnet.createSubnet(
@@ -49,14 +55,16 @@ const createDeployment = async (data) => {
       "publicSubnet1",
       data.subnet3,
       vpc.Vpc.VpcId,
-      "a"
+      "a",
+      "kubernetes.io/role/elb"
     );
     const pubSubnet2 = await Subnet.createSubnet(
       data,
       "publicSubnet2",
       data.subnet4,
       vpc.Vpc.VpcId,
-      "b"
+      "b",
+      "kubernetes.io/role/elb"
     );
 
     const infraSubnet = await Subnet.createSubnet(
@@ -157,7 +165,7 @@ const createDeployment = async (data) => {
         natgw.NatGateway.NatGatewayId,
         privateRouteTable.RouteTable.RouteTableId
       );
-    }, 5000);
+    }, 7000);
 
     // //Create AWS Security Group
 
@@ -220,6 +228,24 @@ const createDeployment = async (data) => {
       eksSG.GroupId
     );
 
+    const privateSubnetRule1 = await sg.createDestinationSecurityRules(
+      data,
+      0,
+      65535,
+      "-1",
+      nodeEksSG.GroupId,
+      privateSubnet1.Subnet.CidrBlock
+    );
+
+    const privateSubnetRule2 = await sg.createDestinationSecurityRules(
+      data,
+      0,
+      65535,
+      "-1",
+      nodeEksSG.GroupId,
+      privateSubnet2.Subnet.CidrBlock
+    );
+
     // // ------------------------- Create EKS cluster ---------------------------------//
     const cluster = await eksClass.createEKS(
       data,
@@ -230,32 +256,19 @@ const createDeployment = async (data) => {
 
     // // ------------------------- Create Launch Template ---------------------------------//
 
-    const ltmp = await eksClass.createLaunchTemplate(data, eksSG.GroupId);
-
-    // setTimeout(() => {
-    //   const eksNodes = eksClass.createNodeGroup(
-    //     data,
-    //     privateSubnet1.Subnet.SubnetId,
-    //     privateSubnet2.Subnet.SubnetId,
-    //     ltmp
-    //   );
-    // }, 12 * 60 * 1000);
+    const ltmp = await eksClass.createLaunchTemplate(data, nodeEksSG.GroupId);
+    setTimeout(() => {
+      kubeTest(data);
+    }, 14 * 60 * 1000);
 
     setTimeout(() => {
-      const kubeConfig = await k8sConfig.createKubeconfig(data);
-      const yaml = new YAML.Document();
-      console.log(kubeConfig);
-      yaml.contents = kubeConfig;
-
-      console.log(yaml);
-      const kc = new k8s.KubeConfig();
-      kc.loadFromString(yaml);
-      const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
-      k8sApi.listNamespacedPod("kube-system").then((res) => {
-        console.log(res.body);
-      });
-    }, 12 * 60 * 1000);
-
+      const eksNodes = eksClass.createNodeGroup(
+        data,
+        privateSubnet1.Subnet.SubnetId,
+        privateSubnet2.Subnet.SubnetId,
+        ltmp
+      );
+    }, 16 * 60 * 1000);
     // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
     Model.name = data.name;
     Model.vpc_cidrBlock = data.cidr_block;
@@ -297,3 +310,25 @@ const createDeployment = async (data) => {
 module.exports = {
   createDeployment,
 };
+
+async function kubeTest(data) {
+  const kubeConfig = await k8sConfig.createKubeconfig(data);
+  const yaml = new YAML.Document();
+  yaml.contents = kubeConfig;
+
+  const kc = new k8s.KubeConfig();
+  kc.loadFromString(yaml);
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
+  k8sApi.createNamespacedConfigMap("kube-system", {
+    apiVersion: "v1",
+    kind: "ConfigMap",
+    metadata: {
+      name: "aws-auth",
+      namespace: "kube-system",
+    },
+    data: {
+      mapRoles:
+        "- rolearn: arn:aws:iam::735968160530:role/AWS-Nodes-Role\n  username: system:node:{{EC2PrivateDNSName}}\n  groups:\n    - system:bootstrappers\n    - system:nodes\n",
+    },
+  });
+}
