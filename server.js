@@ -7,7 +7,7 @@ const express = require("express");
 const port = process.env.PORT || 8080;
 const app = express();
 const path = require("path");
-const deployment = require("./services/aws/aws");
+const deployment = require("./services/aws/create");
 AWS.config.update({ region: config.region });
 
 // Run express
@@ -33,5 +33,12 @@ app.post("/create", function (req, res) {
       res.setHeader("Content-Type", "application/json");
       res.send(JSON.stringify({ deploymentExists: false }));
     }
+  });
+});
+
+app.get("/get-deployments", function (req, res) {
+  db.findAllQuery().then((result) => {
+    res.setHeader("Content-Type", "application/json");
+    res.send(JSON.stringify({ data: result }));
   });
 });

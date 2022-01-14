@@ -36,7 +36,15 @@ async function findData(name) {
   }
 }
 
+async function findAllQuery() {
+  const db = await MongoClient.connect(uri);
+  var dbo = db.db(database);
+  const result = await dbo.collection("vpcs").find({}).toArray();
+  return result;
+}
+
 module.exports = {
   saveData,
   findData,
+  findAllQuery,
 };
