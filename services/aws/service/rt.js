@@ -91,9 +91,26 @@ async function createNatGwRoutes(data, dest, natgw, rtId) {
   }
 }
 
+async function deleteRouteTable(data, routeTableId) {
+  const ec2 = await new AWS.EC2({ region: data.region });
+  try {
+    const result = await ec2
+      .deleteRouteTable({
+        RouteTableId: routeTableId,
+      })
+      .promise();
+    logger.log.info(`Route Table ${routeTableId} was deleted.`);
+  } catch (error) {
+    logger.log.error(
+      `Route Table ${routeTableId} was not deleted. Error: \n ${error}`
+    );
+  }
+}
+
 module.exports = {
   createRouteTable,
   createRouteTableAssociation,
   createItgwRoutes,
   createNatGwRoutes,
+  deleteRouteTable,
 };

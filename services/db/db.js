@@ -43,8 +43,22 @@ async function findAllQuery() {
   return result;
 }
 
+async function deleteData(id) {
+  const db = await MongoClient.connect(uri);
+  var dbo = db.db(database);
+  const result = await dbo
+    .collection("vpcs")
+    .deleteOne({ _id: new ObjectID(id) });
+  if (result) {
+    return result;
+  } else {
+    return false;
+  }
+}
+
 module.exports = {
   saveData,
   findData,
   findAllQuery,
+  deleteData,
 };

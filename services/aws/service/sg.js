@@ -109,13 +109,29 @@ async function createDestinationSecurityRules(
     return rule;
   } catch (error) {
     logger.log.error(
-      `Error: Security Group rule ${destination} - ${source} was  not created! There was an error. Please see the error bellow:\n ${error}`
+      `Error: Security Group rule ${destination} - ${source} was not created! There was an error. Please see the error bellow:\n ${error}`
     );
   }
 }
 
+async function deleteSG(data, sg) {
+  const ec2 = await new AWS.EC2({ region: data.region });
+  try {
+    const sg = await ec2
+      .deleteSecurityGroup({
+        GroupId: sg,
+      })
+      .promise();
+    logger.log.info(`SG Group ${sg} was deleted`);
+
+    return sg;
+  } catch (error) {
+    logger.log.info(`SG Group ${sg} was not deleted. Error: \n ${error}`);
+  }
+}
 module.exports = {
   createSecurityGroup,
   createSecurityRules,
   createDestinationSecurityRules,
+  deleteSG,
 };

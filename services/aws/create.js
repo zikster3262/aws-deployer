@@ -161,7 +161,7 @@ const createDeployment = async (data) => {
       const privateRoute = table.createNatGwRoutes(
         data,
         "0.0.0.0/0",
-        natgw.NatGateway.NatGatewayId,
+        natgw.natgw.NatGateway.NatGatewayId,
         privateRouteTable.RouteTable.RouteTableId
       );
     }, 7000);
@@ -279,6 +279,7 @@ const createDeployment = async (data) => {
 
           // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
           Model.name = data.name;
+          Model.region = data.region;
           Model.vpc = {
             vpc_cidrBlock: data.cidr_block,
             vpcID: vpc.Vpc.VpcId,
@@ -302,15 +303,20 @@ const createDeployment = async (data) => {
           };
           Model.gateway = {
             intgwId: intgw.InternetGateway.InternetGatewayId,
-            natgw: natgw.NatGateway.NatGatewayId,
+            natgw: natgw.natgw.NatGateway.NatGatewayId,
+            allocationId: natgw.eip.AllocationId,
           };
           Model.eks = {
             eksClusterArn: cluster.cluster.arn,
             eksControlPlaneSecurityGroup: eksSG.GroupId,
             eksNodesSecurityGroup: nodeEksSG.GroupId,
+            clusterName: `${data.name}-cluster`,
+            nodeGroupName: `${data.name}-eks-nodes`,
           };
           Model.ec2 = {
             lauchTemplateID: ltmp.LaunchTemplate.LaunchTemplateId,
+            eksSG: eksSG.GroupId,
+            eksNodesSG: eksNodes.GroupId,
           };
 
           db.saveData(Model);

@@ -72,6 +72,7 @@ function showItem() {
                   <th scope="col">Public RT</th>
                   <th scope="col">Private RT</th>
                   <th scope="col">Infra RT</th>
+                  <th scope="col">Delete</th>
                 </tr>
               </thead>
               <tbody>
@@ -87,6 +88,7 @@ function showItem() {
                   <td>${response.routesTables.publicRouteTable}</td>
                   <td>${response.routesTables.privateRouteTable}</td>
                   <td>${response.routesTables.infraRouteTable}</td>
+                  <td><button id="delete-me" type="button" data-name=${response.name} data-id=${response._id} class="delete-me btn btn-danger">Delete</button></td>
                 </tr>
               </tbody>
             </table>
@@ -98,3 +100,20 @@ function showItem() {
 }
 
 showItem();
+
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("delete-me")) {
+    axios
+      .post("/delete", {
+        name: e.target.getAttribute("data-name"),
+        id: e.target.getAttribute("data-id"),
+      })
+      .then(function (result) {
+        console.log("Record was deleted");
+        window.location.reload();
+      })
+      .catch(function () {
+        console.log("Please try it later on!");
+      });
+  }
+});

@@ -64,7 +64,23 @@ async function enableVpcDnsResolution(vpcID, data) {
   }
 }
 
+async function deleteDeploymentVpc(data, vpcID) {
+  const ec2 = new AWS.EC2({ region: data.region });
+  try {
+    const result = await ec2
+      .deleteVpc({
+        VpcId: vpcID,
+      })
+      .promise();
+    logger.log.info(`Vpc ${vpcID} was deleted!`);
+    return result;
+  } catch (error) {
+    logger.log.error(`VPC ${vpcID} was not deleted! Error: /n ${error}`);
+  }
+}
+
 module.exports = {
   createVpc,
   enableVpcDnsResolution,
+  deleteDeploymentVpc,
 };

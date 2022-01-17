@@ -15,7 +15,7 @@ async function createEKS(data, defaultSG, sub1, sub2) {
           subnetIds: [sub1, sub2],
           endpointPrivateAccess: true,
           endpointPublicAccess: true,
-          publicAccessCidrs: ["78.102.47.79/32"],
+          publicAccessCidrs: ["0.0.0.0/0"],
         },
         roleArn: "arn:aws:iam::735968160530:role/Management-EKS",
         tags: {
@@ -148,9 +148,96 @@ async function describeCluster(data) {
   }
 }
 
+async function describeNodeGroup(data) {
+  try {
+    const result = await eks
+      .describeNodegroup({
+        clusterName: `${data.name}-cluster` /* required */,
+        nodegroupName: `${data.name}-eks-nodes` /* required */,
+      })
+      .promise();
+    logger.log.info(
+      `Reading ${data.name}-eks-nodes for ${data.name}-cluster information!`
+    );
+    return result;
+  } catch (error) {
+    logger.log.error(
+      `Error: Describe NodeGroup ${data.name}-eks-nodes for ${data.name}-cluster has failed. Error:\n${error}`
+    );
+  }
+}
+
+async function deleteNodeGroup(data) {
+  const eks = new AWS.EKS({ region: data.region });
+  try {
+    const nodeDelete = await eks
+      .deleteNodegroup({
+        clusterName: `${data.name}-cluster` /* required */,
+        nodegroupName: `${data.name}-eks-nodes` /* required */,
+      })
+      .promise();
+
+    logger.log.info(
+      `Reading ${data.name}-eks-nodes for ${data.name}-cluster was deleted!`
+    );
+    return nodeDelete;
+  } catch (error) {
+    logger.log.error(
+      `Error: Delete NodeGroup ${data.name}-eks-nodes for ${data.name}-cluster has failed. Error:\n${error}`
+    );
+  }
+}
+
+async function deleteEks(data) {
+  const eks = new AWS.EKS({ region: data.region });
+  try {
+    const deleteEks = await eks.deleteCluster(
+      {
+        name: `${data.name}-cluster` /* required */,
+      },
+      function (err, result) {
+        if (err) {
+          console.log(
+            `Cluster ${data.name}-cluster was not deleted! Error: \n ${err}`
+          );
+        } else {
+          console.log(result);
+          logger.log.info(`Cluster ${data.name}-cluster was deleted!`);
+        }
+      }
+    );
+    return deleteEks;
+  } catch (error) {
+    logger.log.error(
+      `Cluster ${data.name}-cluster was not deleted! Error: \n ${error}`
+    );
+  }
+}
+
+async function deleteLaunchTemplate(data, id) {
+  const ec2 = new AWS.EC2({ region: data.region });
+  try {
+    const result = await ec2
+      .deleteLaunchTemplate({
+        LaunchTemplateId: id,
+      })
+      .promise();
+    logger.log.info(`Launch Template ${data.name}-eks-template was deleted!`);
+    return result;
+  } catch (error) {
+    logger.log.error(
+      `Launch Tempalte ${data.name} was  not deleted! Error: \n ${error}`
+    );
+  }
+}
+
 module.exports = {
   createEKS,
   createLaunchTemplate,
   createNodeGroup,
   describeCluster,
+  describeNodeGroup,
+  deleteNodeGroup,
+  deleteEks,
+  deleteLaunchTemplate,
 };
