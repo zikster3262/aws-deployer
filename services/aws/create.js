@@ -7,7 +7,6 @@ const gws = require("./service/gws");
 const table = require("./service/rt");
 const sg = require("./service/sg");
 const eksClass = require("./service/eks");
-AWS.config.update({ region: config.region });
 const db = require("../db/db");
 require("dotenv").config();
 const k8sConfig = require("./service/kb");
@@ -257,65 +256,76 @@ const createDeployment = async (data) => {
     // // ------------------------- Create Launch Template ---------------------------------//
 
     const ltmp = await eksClass.createLaunchTemplate(data, nodeEksSG.GroupId);
-    setTimeout(() => {
-      kubeTest(data);
-    }, 14 * 60 * 1000);
 
-    setTimeout(() => {
-      const eksNodes = eksClass.createNodeGroup(
-        data,
-        privateSubnet1.Subnet.SubnetId,
-        privateSubnet2.Subnet.SubnetId,
-        ltmp
-      );
+    eks.waitFor(
+      "clusterActive",
+      {
+        name: `${data.name}-cluster` /* required */,
+      },
+      function (err, info) {
+        if (err) {
+          console.log(err, err.stack);
+        } else {
+          const ec2 = new AWS.EC2({ region: data.region });
+          const eks = new AWS.EKS({ region: data.region });
+          applyAwsConfigMap(data);
 
-      // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
-      Model.name = data.name;
-      Model.vpc = {
-        vpc_cidrBlock: data.cidr_block,
-        vpcID: vpc.Vpc.VpcId,
-      };
-      Model.subnets = {
-        privateSubnet1Id: privateSubnet1.Subnet.SubnetId,
-        privateSubnet2Id: privateSubnet2.Subnet.SubnetId,
-        privateSubnet1Cidr: privateSubnet1.Subnet.CidrBlock,
-        privateSubnet2Cidr: privateSubnet2.Subnet.CidrBlock,
-        publicSubnet1Id: pubSubnet1.Subnet.SubnetId,
-        publicSubnet2Id: pubSubnet2.Subnet.SubnetId,
-        publiceSubnet1Cidr: pubSubnet1.Subnet.CidrBlock,
-        publiceSubnet2Cidr: pubSubnet2.Subnet.CidrBlock,
-        infraSubnetId: infraSubnet.Subnet.SubnetId,
-        infraSubnetCidr: infraSubnet.Subnet.CidrBlock,
-      };
-      Model.routesTables = {
-        privateRouteTable: privateRouteTable.RouteTable.RouteTableId,
-        publicRouteTable: publicRouteTable.RouteTable.RouteTableId,
-        infraRouteTable: infraRouteTable.RouteTable.RouteTableId,
-      };
-      Model.gateway = {
-        intgwId: intgw.InternetGateway.InternetGatewayId,
-        natgw: natgw.NatGateway.NatGatewayId,
-      };
-      Model.eks = {
-        eksClusterArn: cluster.cluster.arn,
-        eksControlPlaneSecurityGroup: eksSG.GroupId,
-        eksNodesSecurityGroup: nodeEksSG.GroupId,
-      };
-      Model.ec2 = {
-        lauchTemplateID: ltmp.LaunchTemplate.LaunchTemplateId,
-      };
+          const eksNodes = eksClass.createNodeGroup(
+            data,
+            privateSubnet1.Subnet.SubnetId,
+            privateSubnet2.Subnet.SubnetId,
+            ltmp
+          );
 
-      db.saveData(Model);
+          // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
+          Model.name = data.name;
+          Model.vpc = {
+            vpc_cidrBlock: data.cidr_block,
+            vpcID: vpc.Vpc.VpcId,
+          };
+          Model.subnets = {
+            privateSubnet1Id: privateSubnet1.Subnet.SubnetId,
+            privateSubnet2Id: privateSubnet2.Subnet.SubnetId,
+            privateSubnet1Cidr: privateSubnet1.Subnet.CidrBlock,
+            privateSubnet2Cidr: privateSubnet2.Subnet.CidrBlock,
+            publicSubnet1Id: pubSubnet1.Subnet.SubnetId,
+            publicSubnet2Id: pubSubnet2.Subnet.SubnetId,
+            publiceSubnet1Cidr: pubSubnet1.Subnet.CidrBlock,
+            publiceSubnet2Cidr: pubSubnet2.Subnet.CidrBlock,
+            infraSubnetId: infraSubnet.Subnet.SubnetId,
+            infraSubnetCidr: infraSubnet.Subnet.CidrBlock,
+          };
+          Model.routesTables = {
+            privateRouteTable: privateRouteTable.RouteTable.RouteTableId,
+            publicRouteTable: publicRouteTable.RouteTable.RouteTableId,
+            infraRouteTable: infraRouteTable.RouteTable.RouteTableId,
+          };
+          Model.gateway = {
+            intgwId: intgw.InternetGateway.InternetGatewayId,
+            natgw: natgw.NatGateway.NatGatewayId,
+          };
+          Model.eks = {
+            eksClusterArn: cluster.cluster.arn,
+            eksControlPlaneSecurityGroup: eksSG.GroupId,
+            eksNodesSecurityGroup: nodeEksSG.GroupId,
+          };
+          Model.ec2 = {
+            lauchTemplateID: ltmp.LaunchTemplate.LaunchTemplateId,
+          };
 
-      // -------------------------  Log success result to the console ----------------//
-      logger.log.info(
-        `Deployment ${
-          data.name
-        } information were inserted into the database. Info here: \n ${JSON.stringify(
-          Model
-        )}`
-      );
-    }, 16 * 60 * 1000);
+          db.saveData(Model);
+
+          // -------------------------  Log success result to the console ----------------//
+          logger.log.info(
+            `Deployment ${
+              data.name
+            } information were inserted into the database. Info here: \n ${JSON.stringify(
+              Model
+            )}`
+          );
+        }
+      }
+    );
   } catch (error) {
     logger.log.error(
       `Deployment ${data.name} was  not created! There was an error. Please see the error bellow: \n ${error}`
@@ -327,7 +337,7 @@ module.exports = {
   createDeployment,
 };
 
-async function kubeTest(data) {
+async function applyAwsConfigMap(data) {
   const kubeConfig = await k8sConfig.createKubeconfig(data);
   const yaml = new YAML.Document();
   yaml.contents = kubeConfig;
