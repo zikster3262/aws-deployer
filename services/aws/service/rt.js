@@ -25,9 +25,7 @@ async function createRouteTable(data, prefix, VpcId) {
     );
     return routeTable;
   } catch (error) {
-    logger.log.error(
-      `Error: Route Table ${data.name} was  not created! There was an error. Please see the error bellow:\n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -43,9 +41,7 @@ async function createRouteTableAssociation(data, rtId, subnetId) {
     logger.log.info(`Route Table Association for ${data.name} was created!`);
     return rta;
   } catch (error) {
-    logger.log.error(
-      `Error: Route Table Association for ${data.name} was  not created! There was an error. Please see the error bellow:\n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -64,9 +60,7 @@ async function createItgwRoutes(data, dest, itgw, rtId) {
     );
     return route;
   } catch (error) {
-    logger.log.error(
-      `Error: Route itgw ${data.name} was  not created! There was an error. Please see the error bellow:\n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -85,9 +79,49 @@ async function createNatGwRoutes(data, dest, natgw, rtId) {
     );
     return route;
   } catch (error) {
-    logger.log.error(
-      `Error: Route natgw ${data.name} was  not created! There was an error. Please see the error bellow:\n ${error}`
-    );
+    logger.log.error(error);
+  }
+}
+
+async function deleteRouteTable(data, routeTableId) {
+  const ec2 = await new AWS.EC2({ region: data.region });
+  try {
+    const result = await ec2
+      .deleteRouteTable({
+        RouteTableId: routeTableId,
+      })
+      .promise();
+    logger.log.info(`Route Table ${routeTableId} was deleted.`);
+  } catch (error) {
+    logger.log.error(error);
+  }
+}
+
+async function deleteRoute(data, cidrBlock, routeTableId) {
+  const ec2 = await new AWS.EC2({ region: data.region });
+  try {
+    const route = await ec2.deleteRoute({
+      DestinationCidrBlock: cidrBlock,
+      RouteTableId: routeTableId,
+    }).promise;
+    logger.log.info(`Route ${routeTableId} was deleted.`);
+    return route;
+  } catch (error) {
+    logger.log.error(error);
+  }
+}
+
+async function deleteRouteTableAssociation(data, id) {
+  const ec2 = await new AWS.EC2({ region: data.region });
+  try {
+    const rta = await ec2
+      .disassociateRouteTable({
+        AssociationId: id,
+      })
+      .promise();
+    logger.log.info(`Route Table Associacion ${id} was deleted.`);
+  } catch (error) {
+    logger.log.error(error);
   }
 }
 
@@ -96,4 +130,7 @@ module.exports = {
   createRouteTableAssociation,
   createItgwRoutes,
   createNatGwRoutes,
+  deleteRouteTable,
+  deleteRoute,
+  deleteRouteTableAssociation,
 };

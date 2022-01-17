@@ -161,7 +161,7 @@ const createDeployment = async (data) => {
       const privateRoute = table.createNatGwRoutes(
         data,
         "0.0.0.0/0",
-        natgw.NatGateway.NatGatewayId,
+        natgw.natgw.NatGateway.NatGatewayId,
         privateRouteTable.RouteTable.RouteTableId
       );
     }, 7000);
@@ -279,6 +279,7 @@ const createDeployment = async (data) => {
 
           // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
           Model.name = data.name;
+          Model.region = data.region;
           Model.vpc = {
             vpc_cidrBlock: data.cidr_block,
             vpcID: vpc.Vpc.VpcId,
@@ -299,18 +300,31 @@ const createDeployment = async (data) => {
             privateRouteTable: privateRouteTable.RouteTable.RouteTableId,
             publicRouteTable: publicRouteTable.RouteTable.RouteTableId,
             infraRouteTable: infraRouteTable.RouteTable.RouteTableId,
+            routeTableAssociation: {
+              public1: rtaPublic1.AssociationId,
+              public2: rtaPublic2.AssociationId,
+              private1: rtaPrivate1.AssociationId,
+              private2: rtaPrivate2.AssociationId,
+              infra: rtaInfra.AssociationId,
+            },
           };
           Model.gateway = {
             intgwId: intgw.InternetGateway.InternetGatewayId,
-            natgw: natgw.NatGateway.NatGatewayId,
+            natgw: natgw.natgw.NatGateway.NatGatewayId,
+            allocationId: natgw.eip.AllocationId,
+            publicIP: natgw.eip.PublicIp,
           };
           Model.eks = {
             eksClusterArn: cluster.cluster.arn,
             eksControlPlaneSecurityGroup: eksSG.GroupId,
             eksNodesSecurityGroup: nodeEksSG.GroupId,
+            clusterName: `${data.name}-cluster`,
+            nodeGroupName: `${data.name}-eks-nodes`,
           };
           Model.ec2 = {
             lauchTemplateID: ltmp.LaunchTemplate.LaunchTemplateId,
+            eksSG: eksSG.GroupId,
+            eksNodesSG: eksNodes.GroupId,
           };
 
           db.saveData(Model);
@@ -327,9 +341,7 @@ const createDeployment = async (data) => {
       }
     );
   } catch (error) {
-    logger.log.error(
-      `Deployment ${data.name} was  not created! There was an error. Please see the error bellow: \n ${error}`
-    );
+    logger.log.error(error);
   }
 };
 

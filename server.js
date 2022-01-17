@@ -8,7 +8,7 @@ const port = process.env.PORT || 8080;
 const app = express();
 const path = require("path");
 const deployment = require("./services/aws/create");
-AWS.config.update({ region: config.region });
+const deleteDeployment = require("./services/aws/delete");
 
 // Run express
 app.listen(port);
@@ -40,5 +40,18 @@ app.get("/get-deployments", function (req, res) {
   db.findAllQuery().then((result) => {
     res.setHeader("Content-Type", "application/json");
     res.send(JSON.stringify({ data: result }));
+  });
+});
+
+app.post("/delete", function (req, res) {
+  console.log(req.body);
+  db.findData(req.body.name).then((response) => {
+    if (response != "") {
+      logger.log.info(`Deployment ${req.body.name} does exists.`);
+      deleteDeployment.deleteDeployment(response);
+      logger.log.info(`Starting to delete ${req.body.name} deployment`);
+    } else {
+      logger.log.error(`Deployment ${req.body.name} does not exists.`);
+    }
   });
 });

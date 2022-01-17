@@ -64,14 +64,11 @@ function showItem() {
                   <th scope="col">#</th>
                   <th scope="col">VPC ID</th>
                   <th scope="col">EKS ARN</th>
-                  <th scope="col">Launch Template</th>
                   <th scope="col">NatGateway</th>
                   <th scope="col">InternetGateway</th>
-                  <th scope="col">Security Group</th>
-                  <th scope="col">ASG Security Group</th>
-                  <th scope="col">Public RT</th>
-                  <th scope="col">Private RT</th>
-                  <th scope="col">Infra RT</th>
+                  <th scope="col">Cluster SG</th>
+                  <th scope="col">Nodes SG</th>
+                  <th scope="col">Delete</th>
                 </tr>
               </thead>
               <tbody>
@@ -79,14 +76,11 @@ function showItem() {
                   <th scope="row">1</th>
                   <td>${response.vpc.vpcID}</td>
                   <td>${response.eks.eksClusterArn}</td>
-                  <td>${response.ec2.lauchTemplateID}</td>
                   <td>${response.gateway.intgwId}</td>
                   <td>${response.gateway.natgw}</td>
                   <td>${response.eks.eksControlPlaneSecurityGroup}</td>
                   <td>${response.eks.eksNodesSecurityGroup}</td>
-                  <td>${response.routesTables.publicRouteTable}</td>
-                  <td>${response.routesTables.privateRouteTable}</td>
-                  <td>${response.routesTables.infraRouteTable}</td>
+                  <td><button id="delete-me" type="button" data-name=${response.name} data-id=${response._id} class="delete-me btn btn-danger">Delete</button></td>
                 </tr>
               </tbody>
             </table>
@@ -98,3 +92,20 @@ function showItem() {
 }
 
 showItem();
+
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("delete-me")) {
+    axios
+      .post("/delete", {
+        name: e.target.getAttribute("data-name"),
+        id: e.target.getAttribute("data-id"),
+      })
+      .then(function (result) {
+        console.log("Record was deleted");
+        window.location.reload();
+      })
+      .catch(function () {
+        console.log("Please try it later on!");
+      });
+  }
+});

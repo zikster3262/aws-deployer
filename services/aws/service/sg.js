@@ -31,9 +31,7 @@ async function createSecurityGroup(data, name, vpcID) {
     );
     return sgGroup;
   } catch (error) {
-    logger.log.error(
-      `Error: Security Group sg-default-${name} was  not created! There was an error. Please see the error bellow:\n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -69,9 +67,7 @@ async function createSecurityRules(
 
     return rule;
   } catch (error) {
-    logger.log.error(
-      `Error: Security Group rule was  not created! There was an error. Please see the error bellow:\n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -108,9 +104,103 @@ async function createDestinationSecurityRules(
 
     return rule;
   } catch (error) {
-    logger.log.error(
-      `Error: Security Group rule ${destination} - ${source} was  not created! There was an error. Please see the error bellow:\n ${error}`
+    logger.log.error(error);
+  }
+}
+
+async function deleteDestinationSecurityRules(
+  data,
+  from,
+  to,
+  protocol,
+  source,
+  destination
+) {
+  const ec2 = await new AWS.EC2({ region: data.region });
+  try {
+    const rule = await ec2
+      .revokeSecurityGroupIngress({
+        GroupId: source,
+        IpPermissions: [
+          {
+            FromPort: from,
+            ToPort: to,
+            IpProtocol: protocol,
+            IpRanges: [
+              {
+                CidrIp: destination,
+                Description: "Local Subnet opening for VPC",
+              },
+            ],
+          },
+        ],
+      })
+      .promise();
+
+    logger.log.info(`SG IP Rule ${destination}-${source} was deleted!`);
+    return rule;
+  } catch (error) {
+    logger.log.error(error);
+  }
+}
+
+async function deleteSG(data, sg) {
+  const ec2 = await new AWS.EC2({ region: data.region });
+  try {
+    const sgGroup = await ec2.deleteSecurityGroup(
+      {
+        GroupId: sg,
+      },
+      function (err, result) {
+        if (err) {
+          console.log(`SG was not deleted! Error: \n ${err}`);
+        } else {
+          console.log(result);
+          logger.log.info(`SG ${sg} was deleted!`);
+        }
+      }
     );
+    logger.log.info(`SG Group ${sg} was deleted`);
+
+    return sgGroup;
+  } catch (error) {
+    logger.log.error(error);
+  }
+}
+
+async function deleteSecurityRules(
+  data,
+  from,
+  to,
+  protocol,
+  source,
+  destination
+) {
+  const ec2 = await new AWS.EC2({ region: data.region });
+  try {
+    const rule = await ec2
+      .revokeSecurityGroupIngress({
+        GroupId: source,
+        IpPermissions: [
+          {
+            FromPort: from,
+            ToPort: to,
+            IpProtocol: protocol,
+            UserIdGroupPairs: [
+              {
+                GroupId: destination,
+              },
+            ],
+          },
+        ],
+      })
+      .promise();
+
+    logger.log.info(`SG Rule ${destination}-${source} was revoked!`);
+
+    return rule;
+  } catch (error) {
+    logger.log.error(error);
   }
 }
 
@@ -118,4 +208,7 @@ module.exports = {
   createSecurityGroup,
   createSecurityRules,
   createDestinationSecurityRules,
+  deleteSG,
+  deleteSecurityRules,
+  deleteDestinationSecurityRules,
 };
