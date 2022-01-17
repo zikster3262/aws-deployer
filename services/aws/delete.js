@@ -84,8 +84,14 @@ async function deleteDeployment(data) {
                 );
 
                 // ------------------------- Delete VPC ---------------------------------//
-
-                const vpc = VPC.deleteDeploymentVpc(data, data.vpc.vpcID);
+                setTimeout(() => {
+                  const vpc = VPC.deleteDeploymentVpc(data, data.vpc.vpcID);
+                  // ------------------------- Delete Data from DB ---------------------------------//
+                  db.deleteData(data._id);
+                  logger.log.info(
+                    `Deployment ${data.name} was deleted from the database.`
+                  );
+                }, 15000);
               }
             }
           );
@@ -212,10 +218,6 @@ async function deleteDeployment(data) {
       data,
       data.routesTables.infraRouteTable
     );
-
-    // ------------------------- Delete Data from DB ---------------------------------//
-    db.deleteData(data._id);
-    logger.log.info(`Deployment ${data.name} was deleted from the database.`);
   } catch (error) {
     logger.log.error(
       `Deployment ${data.name} was  not deleted! There was an error. Please see the error bellow: \n ${error}`

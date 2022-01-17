@@ -179,20 +179,12 @@ async function deleteNodeGroup(data) {
 async function deleteEks(data) {
   const eks = new AWS.EKS({ region: data.region });
   try {
-    const deleteEks = await eks.deleteCluster(
-      {
+    const deleteEks = await eks
+      .deleteCluster({
         name: `${data.name}-cluster` /* required */,
-      },
-      function (err, result) {
-        if (err) {
-          console.log(
-            `Cluster ${data.name}-cluster was not deleted! Error: \n ${err}`
-          );
-        } else {
-          logger.log.info(`Cluster ${data.name}-cluster was deleted!`);
-        }
-      }
-    );
+      })
+      .promise();
+    logger.log.info(`Cluster ${data.name}-cluster is being deleted!`);
     return deleteEks;
   } catch (error) {
     logger.log.error(error);

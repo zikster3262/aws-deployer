@@ -137,7 +137,7 @@ async function deleteDestinationSecurityRules(
       })
       .promise();
 
-    logger.log.info(`SG IP Rule ${destination}-${source} was  created!`);
+    logger.log.info(`SG IP Rule ${destination}-${source} was deleted!`);
     return rule;
   } catch (error) {
     logger.log.error(error);
