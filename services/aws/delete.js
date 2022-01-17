@@ -37,23 +37,55 @@ async function deleteDeployment(data) {
         // an error occurred
         const deleteEksControlPlane = eksClass.deleteEks(data);
 
-        // // ------------------------- Delete EKS Control Plane ---------------------------------//
-        eks.waitFor(
-          "clusterDeleted",
-          {
-            name: `${data.name}-cluster`,
-          },
-          function (err, result) {
-            if (err) {
-              console.log(err, err.stack);
-            } else {
-              const eksNodesSG = sg.deleteSG(
-                data,
-                data.eks.eksControlPlaneSecurityGroup
-              );
+        setTimeout(() => {
+          // // ------------------------- Delete EKS Control Plane ---------------------------------//
+          eks.waitFor(
+            "clusterDeleted",
+            {
+              name: `${data.name}-cluster`,
+            },
+            function (err, result) {
+              if (err) {
+                console.log(err, err.stack);
+              } else {
+                const eksNodesSG = sg.deleteSG(
+                  data,
+                  data.eks.eksControlPlaneSecurityGroup
+                );
+
+                // ------------------------- Delete Gateways ---------------------------------//
+
+                const itgw = gw.deleteInternetGateway(data, data.vpc.vpcID);
+                // ------------------------- Delete Subnets ---------------------------------//
+
+                const deletePrivate1 = Subnet.deleteSubnet(
+                  data,
+                  data.subnets.privateSubnet1Id
+                );
+                const deletePrivate2 = Subnet.deleteSubnet(
+                  data,
+                  data.subnets.privateSubnet2Id
+                );
+                const deletePublic1 = Subnet.deleteSubnet(
+                  data,
+                  data.subnets.publicSubnet1Id
+                );
+                const deletePublic2 = Subnet.deleteSubnet(
+                  data,
+                  data.subnets.publicSubnet2Id
+                );
+                const deleteInfra = Subnet.deleteSubnet(
+                  data,
+                  data.subnets.infraSubnetId
+                );
+
+                // ------------------------- Delete VPC ---------------------------------//
+
+                const vpc = VPC.deleteDeploymentVpc(data, data.vpc.vpcID);
+              }
             }
-          }
-        );
+          );
+        }, 2 * 60 * 1000);
       }
     );
 
@@ -109,7 +141,7 @@ async function deleteDeployment(data) {
       0,
       65535,
       "-1",
-      data.eks.eksControlPlaneSecurityGroup,
+      data.eks.eksNodesSecurityGroup,
       data.subnets.privateSubnet1Cidr
     );
 
@@ -118,7 +150,7 @@ async function deleteDeployment(data) {
       0,
       65535,
       "-1",
-      data.eks.eksControlPlaneSecurityGroup,
+      data.eks.eksNodesSecurityGroup,
       data.subnets.privateSubnet2Cidr
     );
 
@@ -180,35 +212,6 @@ async function deleteDeployment(data) {
     // // ------------------------- Delete Security Groups ---------------------------------//
 
     const eksSG = await sg.deleteSG(data, data.eks.eksNodesSecurityGroup);
-
-    setTimeout(() => {
-      // ------------------------- Delete Gateways ---------------------------------//
-
-      const itgw = gw.deleteInternetGateway(data, data.vpc.vpcID);
-      // ------------------------- Delete Subnets ---------------------------------//
-
-      const deletePrivate1 = Subnet.deleteSubnet(
-        data,
-        data.subnets.privateSubnet1Id
-      );
-      const deletePrivate2 = Subnet.deleteSubnet(
-        data,
-        data.subnets.privateSubnet2Id
-      );
-      const deletePublic1 = Subnet.deleteSubnet(
-        data,
-        data.subnets.publicSubnet1Id
-      );
-      const deletePublic2 = Subnet.deleteSubnet(
-        data,
-        data.subnets.publicSubnet2Id
-      );
-      const deleteInfra = Subnet.deleteSubnet(data, data.subnets.infraSubnetId);
-
-      // ------------------------- Delete VPC ---------------------------------//
-
-      const vpc = VPC.deleteDeploymentVpc(data, data.vpc.vpcID);
-    }, 6 * 60 * 1000);
 
     // ------------------------- Delete Data from DB ---------------------------------//
     // db.deleteData(data._id);
