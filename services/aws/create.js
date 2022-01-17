@@ -7,7 +7,6 @@ const gws = require("./service/gws");
 const table = require("./service/rt");
 const sg = require("./service/sg");
 const eksClass = require("./service/eks");
-AWS.config.update({ region: config.region });
 const db = require("../db/db");
 require("dotenv").config();
 const k8sConfig = require("./service/kb");
