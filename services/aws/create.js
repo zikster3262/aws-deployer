@@ -277,20 +277,6 @@ const createDeployment = async (data) => {
             ltmp
           );
 
-          eks.waitFor(
-            "nodegroupActive",
-            {
-              clusterName: `${data.name}-cluster` /* required */,
-              nodegroupName: `${data.name}-eks-nodes` /* required */,
-            },
-            function (err, result) {
-              if (err) console.log(err, err.stack);
-              else {
-                logger.log.info(`Deployment ${data.name} is ready.`);
-              }
-            }
-          );
-
           // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
           Model.name = data.name;
           Model.region = data.region;

@@ -48,6 +48,10 @@ async function deleteDeployment(data) {
               if (err) {
                 console.log(err, err.stack);
               } else {
+                // // ------------------------- Delete Security Groups ---------------------------------//
+
+                const eksSG = sg.deleteSG(data, data.eks.eksNodesSecurityGroup);
+
                 const eksNodesSG = sg.deleteSG(
                   data,
                   data.eks.eksControlPlaneSecurityGroup
@@ -209,13 +213,9 @@ async function deleteDeployment(data) {
       data.routesTables.infraRouteTable
     );
 
-    // // ------------------------- Delete Security Groups ---------------------------------//
-
-    const eksSG = await sg.deleteSG(data, data.eks.eksNodesSecurityGroup);
-
     // ------------------------- Delete Data from DB ---------------------------------//
-    // db.deleteData(data._id);
-    // logger.log.info(`Deployment ${data.name} was deleted from the database.`);
+    db.deleteData(data._id);
+    logger.log.info(`Deployment ${data.name} was deleted from the database.`);
   } catch (error) {
     logger.log.error(
       `Deployment ${data.name} was  not deleted! There was an error. Please see the error bellow: \n ${error}`
