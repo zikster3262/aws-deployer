@@ -104,6 +104,24 @@ async function deleteDeployment(data) {
       data.eks.eksControlPlaneSecurityGroup
     );
 
+    const deletePrivate1SubnetAccess = await sg.deleteDestinationSecurityRules(
+      data,
+      0,
+      65535,
+      "-1",
+      data.eks.eksControlPlaneSecurityGroup,
+      data.subnets.privateSubnet1Cidr
+    );
+
+    const deletePrivate2SubnetAccess = await sg.deleteDestinationSecurityRules(
+      data,
+      0,
+      65535,
+      "-1",
+      data.eks.eksControlPlaneSecurityGroup,
+      data.subnets.privateSubnet2Cidr
+    );
+
     // ------------------------- Delete Routes ---------------------------------//
     const deletePrivateRoute = await table.deleteRoute(
       data,

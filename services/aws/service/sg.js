@@ -108,6 +108,42 @@ async function createDestinationSecurityRules(
   }
 }
 
+async function deleteDestinationSecurityRules(
+  data,
+  from,
+  to,
+  protocol,
+  source,
+  destination
+) {
+  const ec2 = await new AWS.EC2({ region: data.region });
+  try {
+    const rule = await ec2
+      .revokeSecurityGroupIngress({
+        GroupId: source,
+        IpPermissions: [
+          {
+            FromPort: from,
+            ToPort: to,
+            IpProtocol: protocol,
+            IpRanges: [
+              {
+                CidrIp: destination,
+                Description: "Local Subnet opening for VPC",
+              },
+            ],
+          },
+        ],
+      })
+      .promise();
+
+    logger.log.info(`SG IP Rule ${destination}-${source} was  created!`);
+    return rule;
+  } catch (error) {
+    logger.log.error(error);
+  }
+}
+
 async function deleteSG(data, sg) {
   const ec2 = await new AWS.EC2({ region: data.region });
   try {
@@ -174,4 +210,5 @@ module.exports = {
   createDestinationSecurityRules,
   deleteSG,
   deleteSecurityRules,
+  deleteDestinationSecurityRules,
 };
