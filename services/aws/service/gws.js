@@ -43,9 +43,7 @@ async function createNatGW(data, subnetId) {
     );
     return { natgw, eip };
   } catch (error) {
-    logger.log.error(
-      `Error: natgw-${data.name} was  not created! There was an error. Please see the error bellow:\n${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -78,35 +76,44 @@ async function createItgw(data, VpcId) {
     );
     return itgw;
   } catch (error) {
-    logger.log.error(
-      `Error: itgw-${data.name} was  not created! There was an error. Please see the error bellow:\n${error}`
-    );
+    logger.log.error(error);
   }
 }
 
 async function deleteNatgateway(data) {
   try {
     const ec2 = new AWS.EC2({ region: data.region });
-
-    const deleteEip = ec2
-      .releaseAddress({
-        AllocationId: data.gateway.allocationId,
-      })
-      .promise();
-
-    const result = await ec2
+    const natgw = await ec2
       .deleteNatGateway({
         NatGatewayId: data.gateway.natgw,
       })
       .promise();
 
     logger.log.info(
-      `NATGW natgw-${data.name} was deleted ID - ${data.gateway.natgw} and EIP was release AllocationID - ${data.gateway.allocationId}`
+      `NATGW natgw-${data.name} was deleted ID - ${data.gateway.natgw} was deleted`
     );
   } catch (error) {
-    logger.log.info(
-      `NATGW  natgw-${data.name} was not deleted ID - ${data.gateway.natgw}. See Error: \n ${error}`
-    );
+    logger.log.error(error);
+  }
+}
+
+async function deleteEip(data) {
+  const ec2 = new AWS.EC2({ region: data.region });
+  try {
+    // const discassociateEip = await ec2
+    //   .disassociateAddress({
+    //     AssociationId: data.gateway.allocationId,
+    //   })
+    //   .promise();
+    const deleteEip = await ec2
+      .releaseAddress({
+        // PublicIp: data.gateway.publicIP,
+        AllocationId: data.gateway.allocationId,
+      })
+      .promise();
+    logger.log.info("Elastic IP was deleted");
+  } catch (error) {
+    logger.log.error(error);
   }
 }
 
@@ -129,9 +136,7 @@ async function deleteInternetGateway(data, vpcID) {
     );
     return { detach, result };
   } catch (error) {
-    logger.log.error(
-      `INTGW itgw-${data.name} was not detached and deleted ID - ${data.gateway.intgwId}! Error: \n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -140,4 +145,5 @@ module.exports = {
   createItgw,
   deleteNatgateway,
   deleteInternetGateway,
+  deleteEip,
 };

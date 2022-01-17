@@ -17,7 +17,7 @@ async function saveData(data) {
     .collection("vpcs")
     .insertOne(data, function (err, info) {
       if (err) {
-        logger.log.error("Error occurred while inserting to the database");
+        logger.log.error(err);
       } else {
         logger.log.info("Data have been inserted into the database.");
       }

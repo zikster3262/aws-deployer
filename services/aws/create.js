@@ -300,11 +300,19 @@ const createDeployment = async (data) => {
             privateRouteTable: privateRouteTable.RouteTable.RouteTableId,
             publicRouteTable: publicRouteTable.RouteTable.RouteTableId,
             infraRouteTable: infraRouteTable.RouteTable.RouteTableId,
+            routeTableAssociation: {
+              public1: rtaPublic1.AssociationId,
+              public2: rtaPublic2.AssociationId,
+              private1: rtaPrivate1.AssociationId,
+              private2: rtaPrivate2.AssociationId,
+              infra: rtaInfra.AssociationId,
+            },
           };
           Model.gateway = {
             intgwId: intgw.InternetGateway.InternetGatewayId,
             natgw: natgw.natgw.NatGateway.NatGatewayId,
             allocationId: natgw.eip.AllocationId,
+            publicIP: natgw.eip.PublicIp,
           };
           Model.eks = {
             eksClusterArn: cluster.cluster.arn,
@@ -332,10 +340,22 @@ const createDeployment = async (data) => {
         }
       }
     );
-  } catch (error) {
-    logger.log.error(
-      `Deployment ${data.name} was  not created! There was an error. Please see the error bellow: \n ${error}`
+
+    eks.waitFor(
+      "nodegroupActive",
+      {
+        clusterName: `${data.name}-cluster` /* required */,
+        nodegroupName: `${data.name}-eks-nodes` /* required */,
+      },
+      function (err, result) {
+        if (err) console.log(err, err.stack);
+        else {
+          logger.log.info(`Deployment ${data.name} is ready.`);
+        }
+      }
     );
+  } catch (error) {
+    logger.log.error(error);
   }
 };
 

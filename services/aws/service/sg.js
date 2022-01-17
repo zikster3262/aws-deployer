@@ -31,9 +31,7 @@ async function createSecurityGroup(data, name, vpcID) {
     );
     return sgGroup;
   } catch (error) {
-    logger.log.error(
-      `Error: Security Group sg-default-${name} was  not created! There was an error. Please see the error bellow:\n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -69,9 +67,7 @@ async function createSecurityRules(
 
     return rule;
   } catch (error) {
-    logger.log.error(
-      `Error: Security Group rule was  not created! There was an error. Please see the error bellow:\n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -108,30 +104,74 @@ async function createDestinationSecurityRules(
 
     return rule;
   } catch (error) {
-    logger.log.error(
-      `Error: Security Group rule ${destination} - ${source} was not created! There was an error. Please see the error bellow:\n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 
 async function deleteSG(data, sg) {
   const ec2 = await new AWS.EC2({ region: data.region });
   try {
-    const sg = await ec2
-      .deleteSecurityGroup({
+    const sgGroup = await ec2.deleteSecurityGroup(
+      {
         GroupId: sg,
-      })
-      .promise();
+      },
+      function (err, result) {
+        if (err) {
+          console.log(`SG was not deleted! Error: \n ${err}`);
+        } else {
+          console.log(result);
+          logger.log.info(`SG ${sg} was deleted!`);
+        }
+      }
+    );
     logger.log.info(`SG Group ${sg} was deleted`);
 
-    return sg;
+    return sgGroup;
   } catch (error) {
-    logger.log.info(`SG Group ${sg} was not deleted. Error: \n ${error}`);
+    logger.log.error(error);
   }
 }
+
+async function deleteSecurityRules(
+  data,
+  from,
+  to,
+  protocol,
+  source,
+  destination
+) {
+  const ec2 = await new AWS.EC2({ region: data.region });
+  try {
+    const rule = await ec2
+      .revokeSecurityGroupIngress({
+        GroupId: source,
+        IpPermissions: [
+          {
+            FromPort: from,
+            ToPort: to,
+            IpProtocol: protocol,
+            UserIdGroupPairs: [
+              {
+                GroupId: destination,
+              },
+            ],
+          },
+        ],
+      })
+      .promise();
+
+    logger.log.info(`SG Rule ${destination}-${source} was revoked!`);
+
+    return rule;
+  } catch (error) {
+    logger.log.error(error);
+  }
+}
+
 module.exports = {
   createSecurityGroup,
   createSecurityRules,
   createDestinationSecurityRules,
   deleteSG,
+  deleteSecurityRules,
 };

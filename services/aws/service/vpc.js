@@ -29,9 +29,7 @@ async function createVpc(data) {
     );
     return response;
   } catch (error) {
-    logger.log.error(
-      `Error: VPC: vpc-${data.name} was  not created! There was an error. Please see the error bellow:\n${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -58,9 +56,7 @@ async function enableVpcDnsResolution(vpcID, data) {
     logger.log.info(`VpcResolution was enabled for vpc ${vpcID}`);
     return enableDnsHostnames, enableDnsSupport;
   } catch (error) {
-    logger.log.error(
-      `VpcHostnameResolution was not enabled for vpc ${vpcID}! Error: /n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -75,7 +71,7 @@ async function deleteDeploymentVpc(data, vpcID) {
     logger.log.info(`Vpc ${vpcID} was deleted!`);
     return result;
   } catch (error) {
-    logger.log.error(`VPC ${vpcID} was not deleted! Error: /n ${error}`);
+    logger.log.error(error);
   }
 }
 

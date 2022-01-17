@@ -29,9 +29,7 @@ async function createEKS(data, defaultSG, sub1, sub2) {
     );
     return eksCluster;
   } catch (error) {
-    logger.log.error(
-      `Error: Cluster: ${data.name}-cluster was  not created! There was an error. Please see the error bellow:\n${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -88,9 +86,7 @@ async function createLaunchTemplate(data, sgId) {
     );
     return ltmp;
   } catch (error) {
-    logger.log.error(
-      `Error: Launch template ${data.name}-eks-template was  not created! There was an error. Please see the error bellow:\n${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -125,9 +121,7 @@ async function createNodeGroup(data, sub1, sub2, ltmp) {
     logger.log.info(`EKS Node Group ${data.name} was created!`);
     return eksNodes;
   } catch (error) {
-    logger.log.error(
-      `Error: EKS Node Group ${data.name} was  not created! There was an error. Please see the error bellow:\n${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -142,9 +136,7 @@ async function describeCluster(data) {
     logger.log.info(`Reading ${data.name}-cluster Cluster information!`);
     return config;
   } catch (error) {
-    logger.log.error(
-      `Error: Describe cluster ${data.name}-cluster has failed. Error:\n${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -161,9 +153,7 @@ async function describeNodeGroup(data) {
     );
     return result;
   } catch (error) {
-    logger.log.error(
-      `Error: Describe NodeGroup ${data.name}-eks-nodes for ${data.name}-cluster has failed. Error:\n${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -178,13 +168,11 @@ async function deleteNodeGroup(data) {
       .promise();
 
     logger.log.info(
-      `Reading ${data.name}-eks-nodes for ${data.name}-cluster was deleted!`
+      `Deleting ${data.name}-eks-nodes for ${data.name}-cluster was deleted!`
     );
     return nodeDelete;
   } catch (error) {
-    logger.log.error(
-      `Error: Delete NodeGroup ${data.name}-eks-nodes for ${data.name}-cluster has failed. Error:\n${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -201,16 +189,13 @@ async function deleteEks(data) {
             `Cluster ${data.name}-cluster was not deleted! Error: \n ${err}`
           );
         } else {
-          console.log(result);
           logger.log.info(`Cluster ${data.name}-cluster was deleted!`);
         }
       }
     );
     return deleteEks;
   } catch (error) {
-    logger.log.error(
-      `Cluster ${data.name}-cluster was not deleted! Error: \n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 
@@ -225,9 +210,7 @@ async function deleteLaunchTemplate(data, id) {
     logger.log.info(`Launch Template ${data.name}-eks-template was deleted!`);
     return result;
   } catch (error) {
-    logger.log.error(
-      `Launch Tempalte ${data.name} was  not deleted! Error: \n ${error}`
-    );
+    logger.log.error(error);
   }
 }
 

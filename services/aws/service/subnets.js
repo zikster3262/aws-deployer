@@ -35,12 +35,25 @@ async function createSubnet(data, name, cidr_block, VpcId, zone, tag) {
     );
     return subnet;
   } catch (error) {
-    logger.log.error(
-      `Error: Subnet: ${data.name}-${name} was  not created! There was an error. Please see the error bellow:\n${error}`
-    );
+    logger.log.error(error);
+  }
+}
+
+async function deleteSubnet(data, id) {
+  const ec2 = new AWS.EC2({ region: data.region });
+  try {
+    const subnet = await ec2
+      .deleteSubnet({
+        SubnetId: id,
+      })
+      .promise();
+    logger.log.info(`Subnet ${id} was deleted.`);
+  } catch (error) {
+    logger.log.error(error);
   }
 }
 
 module.exports = {
   createSubnet,
+  deleteSubnet,
 };
