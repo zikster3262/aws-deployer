@@ -44,6 +44,7 @@ async function findAllQuery() {
 }
 
 async function deleteData(id) {
+  console.log("This is the ID: " + id);
   const db = await MongoClient.connect(uri);
   var dbo = db.db(database);
   const result = await dbo

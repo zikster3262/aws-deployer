@@ -7,6 +7,7 @@ const logger = require("../../utils/logger");
 const sg = require("./service/sg");
 const VPC = require("./service/vpc");
 const Subnet = require("./service/subnets");
+const { deleteData } = require("../queues/db/delete/order-queue");
 
 async function deleteDeployment(data) {
   const ec2 = new AWS.EC2({ region: data.region });
@@ -87,7 +88,8 @@ async function deleteDeployment(data) {
                 setTimeout(() => {
                   const vpc = VPC.deleteDeploymentVpc(data, data.vpc.vpcID);
                   // ------------------------- Delete Data from DB ---------------------------------//
-                  db.deleteData(data._id);
+                  deleteData(data);
+
                   logger.log.info(
                     `Deployment ${data.name} was deleted from the database.`
                   );

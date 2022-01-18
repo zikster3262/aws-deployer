@@ -13,6 +13,7 @@ const k8sConfig = require("./service/kb");
 const YAML = require("yaml");
 const { KubeConfig } = require("@kubernetes/client-node");
 const k8s = require("@kubernetes/client-node");
+const { insertData } = require("../queues/db/create/order-queue");
 
 // Create empty deployment model object
 const Model = {};
@@ -327,7 +328,7 @@ const createDeployment = async (data) => {
             eksNodesSG: eksNodes.GroupId,
           };
 
-          db.saveData(Model);
+          insertData(Model);
 
           // -------------------------  Log success result to the console ----------------//
           logger.log.info(
