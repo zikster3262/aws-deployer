@@ -1,14 +1,17 @@
-require("dotenv").config();
 const AWS = require("aws-sdk");
 const config = require("./config/region");
 const logger = require("./utils/logger");
 const db = require("./services/db/db");
 const express = require("express");
+
 const port = process.env.PORT || 8080;
 const app = express();
 const path = require("path");
-const deployment = require("./services/aws/create");
-const deleteDeployment = require("./services/aws/delete");
+
+const { createNewDep } = require("./services/queues/aws/create/order-queue");
+const {
+  createDeleteDeployment,
+} = require("./services/queues/aws/delete/order-queue");
 
 // Run express
 app.listen(port);
@@ -28,8 +31,10 @@ app.post("/create", function (req, res) {
       res.setHeader("Content-Type", "application/json");
       res.send(JSON.stringify({ deploymentExists: true }));
     } else {
-      logger.log.info(`Creating deployment ${req.body.data.name}.`);
-      deployment.createDeployment(req.body.data);
+      logger.log.info(
+        `Creating deployment for ${req.body.data.name}. Job added to the Queue.`
+      );
+      createNewDep(req.body.data);
       res.setHeader("Content-Type", "application/json");
       res.send(JSON.stringify({ deploymentExists: false }));
     }
@@ -48,7 +53,10 @@ app.post("/delete", function (req, res) {
   db.findData(req.body.name).then((response) => {
     if (response != "") {
       logger.log.info(`Deployment ${req.body.name} does exists.`);
-      deleteDeployment.deleteDeployment(response);
+      logger.log.info(
+        `Creating delete job for ${req.body.name}. Job added to the Queue.`
+      );
+      createDeleteDeployment(response);
       logger.log.info(`Starting to delete ${req.body.name} deployment`);
     } else {
       logger.log.error(`Deployment ${req.body.name} does not exists.`);
