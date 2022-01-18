@@ -25,16 +25,23 @@ app.use(
 );
 
 app.post("/create", function (req, res) {
+  console.log(req.body.data);
   db.findData(req.body.data.name).then((response) => {
     if (response != "") {
       logger.log.info(`Deployment ${req.body.data.name} already exists.`);
       res.setHeader("Content-Type", "application/json");
       res.send(JSON.stringify({ deploymentExists: true }));
     } else {
-      logger.log.info(
-        `Creating deployment for ${req.body.data.name}. Job added to the Queue.`
-      );
-      createNewDep(req.body.data);
+      if (req.body.data.aws) {
+        logger.log.info(
+          `Creating deployment for ${req.body.data.name}. Job added to the Queue.`
+        );
+        createNewDep(req.body.data);
+      } else {
+        console.log("Create Azure");
+        console.log(req.body.data.azure);
+      }
+
       res.setHeader("Content-Type", "application/json");
       res.send(JSON.stringify({ deploymentExists: false }));
     }
@@ -56,6 +63,7 @@ app.post("/delete", function (req, res) {
         `Creating delete job for ${req.body.name}. Job added to the Queue.`
       );
       createDeleteDeployment(response);
+
       logger.log.info(`Starting to delete ${req.body.name} deployment`);
     } else {
       logger.log.error(`Deployment ${req.body.name} does not exists.`);

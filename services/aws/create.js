@@ -281,6 +281,7 @@ const createDeployment = async (data) => {
           // ------------------------- Change Object DeploymentModel properties and insert deployment data  -------//
           Model.name = data.name;
           Model.region = data.region;
+          Model.aws = data.aws;
           Model.vpc = {
             vpc_cidrBlock: data.cidr_block,
             vpcID: vpc.Vpc.VpcId,

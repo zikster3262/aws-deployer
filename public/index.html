@@ -46,8 +46,14 @@
           <h3>Create Deployment</h3>
           <p>Fill in the data below.</p>
           <form id="main-form" class="form-main requires-validation" novalidate>
+            <h2>Cloud Provider</h2>
 
-            <h2>VPC Information</h2>
+            <input class="checkBox" type="radio" id="azure" name="type" value="Azure">
+            <label for="azure">Azure</label><br>
+            <input class="checkBox" type="radio" id="aws" name="type" value="AWS">
+            <label for="aws">AWS</label><br>
+
+            <h2>Network Information</h2>
         <div class="col-md-12">
           <input class="form-control" type="text" name="region" placeholder="region" value="eu-central-1" required>
           <div class="valid-feedback">Deployment name field is valid!</div>

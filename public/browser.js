@@ -15,17 +15,26 @@
       false
     );
   });
-})();
+});
 
 function submitForm(e) {
   var formData = {};
-  $("input").each(function () {
+  $("input.form-control").each(function () {
     formData[this.name] = this.value;
   });
 
+  const cbAws = document.querySelector("#aws");
+  const cbAzure = document.querySelector("#azure");
+  var checkBox = {
+    azure: cbAzure.checked,
+    aws: cbAws.checked,
+  };
+
+  const mergedData = { ...formData, ...checkBox };
+
   axios
     .post("/create", {
-      data: formData,
+      data: mergedData,
     })
     .then(function (response) {
       console.log(response);
