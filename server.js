@@ -49,7 +49,6 @@ app.get("/get-deployments", function (req, res) {
 });
 
 app.post("/delete", function (req, res) {
-  console.log(req.body);
   db.findData(req.body.name).then((response) => {
     if (response != "") {
       logger.log.info(`Deployment ${req.body.name} does exists.`);
