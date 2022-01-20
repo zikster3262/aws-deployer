@@ -14,6 +14,8 @@ const YAML = require("yaml");
 const { KubeConfig } = require("@kubernetes/client-node");
 const k8s = require("@kubernetes/client-node");
 const { insertData } = require("../queues/db/create/order-queue");
+const kubernetes = require("../kubernetes/nginx");
+const fluentbit = require("../kubernetes/fluent");
 
 // Create empty deployment model object
 const Model = {};
@@ -327,7 +329,8 @@ const createDeployment = async (data) => {
             eksSG: eksSG.GroupId,
             eksNodesSG: eksNodes.GroupId,
           };
-
+          kubernetes.deployNginx(data);
+          fluentbit.deployFluent(data);
           insertData(Model);
 
           // -------------------------  Log success result to the console ----------------//
