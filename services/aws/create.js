@@ -16,6 +16,7 @@ const k8s = require("@kubernetes/client-node");
 const { insertData } = require("../queues/db/create/order-queue");
 const kubernetes = require("../kubernetes/nginx");
 const fluentbit = require("../kubernetes/fluent");
+const prometheus = require("../kubernetes/prometheus");
 
 // Create empty deployment model object
 const Model = {};
@@ -331,6 +332,7 @@ const createDeployment = async (data) => {
           };
           kubernetes.deployNginx(data);
           fluentbit.deployFluent(data);
+          prometheus.deployPrometheus(data);
           insertData(Model);
 
           // -------------------------  Log success result to the console ----------------//
