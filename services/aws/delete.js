@@ -8,6 +8,7 @@ const sg = require("./service/sg");
 const VPC = require("./service/vpc");
 const Subnet = require("./service/subnets");
 const { deleteData } = require("../queues/db/delete/order-queue");
+const kubernetes = require("../kubernetes/nginx");
 
 async function deleteDeployment(data) {
   const ec2 = new AWS.EC2({ region: data.region });
@@ -15,7 +16,7 @@ async function deleteDeployment(data) {
 
   try {
     // // ------------------------- Delete EKS  NodeGroup ---------------------------------//
-
+    const deleteNginx = await kubernetes.deleteNginx(data);
     const deleteEksNodes = await eksClass.deleteNodeGroup(data);
     const natgw = await gw.deleteNatgateway(data);
 
