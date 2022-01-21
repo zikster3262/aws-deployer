@@ -54,6 +54,7 @@ async function deployNginx(data) {
       created.push(response.body);
     }
   }
+  logger.log.info("Nginx created.");
   return created;
 }
 

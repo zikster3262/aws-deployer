@@ -64,7 +64,6 @@ async function createKubeconfig(data) {
         },
       ],
     };
-    logger.log.info(`Kubeconfig for ${data.name}-cluster was created.`);
     return kubeconfig;
   } catch (error) {
     logger.log.error(error);
